@@ -1,0 +1,54 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(8, 11, 16, 0.7);
+}
+
+.sheet {
+  width: min(100%, 720px);
+  max-height: 88dvh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  /* Only the top corners are cut; the sheet sits flush with the bottom edge. */
+  clip-path: polygon(var(--cut) 0, 100% 0, 100% 100%, 0 100%, 0 var(--cut));
+}
+
+.sheet::before {
+  clip-path: polygon(var(--cut) 0, 100% 0, 100% 100%, 0 100%, 0 var(--cut));
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.title {
+  font-family: var(--font-title);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--primary-bright);
+}
+
+.close {
+  width: var(--touch);
+  height: var(--touch);
+  border: 0;
+  background: transparent;
+  font-size: var(--text-2xl);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.body {
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-4) calc(var(--space-5) + var(--safe-bottom));
+}

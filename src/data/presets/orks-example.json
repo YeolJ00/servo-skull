@@ -1,0 +1,11 @@
+{
+  "name": "Orks example",
+  "factionIds": ["ORK"],
+  "pointsLimit": 500,
+  "units": [
+    { "name": "Warboss", "models": 1 },
+    { "name": "Boyz", "models": 10 },
+    { "name": "Beast Snagga Boyz", "models": 10 },
+    { "name": "Deffkoptas", "models": 3 }
+  ]
+}

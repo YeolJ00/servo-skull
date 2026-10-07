@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
 import { clearGame, loadGame, saveGame } from '../data/gameStorage.ts';
-import { apply, replay } from '../engine/reducer.ts';
+import { apply, replay, replaySafe } from '../engine/reducer.ts';
 import { EngineError, type EngineErrorCode, type GameEvent, type GameSetup, type GameState } from '../engine/types.ts';
 
 interface Loaded {
@@ -30,7 +30,18 @@ export function useGame(): GameHandle {
   useEffect(() => {
     let alive = true;
     void loadGame().then((g) => {
-      if (alive) setLoaded(g ? { setup: g.setup, events: g.events } : null);
+      if (!alive) return;
+      if (!g) {
+        setLoaded(null);
+        return;
+      }
+      // A log that no longer replays (older engine, corrupted storage) is cut at the first bad event.
+      const safe = replaySafe(g.setup, g.events);
+      if (safe.dropped > 0) {
+        console.warn(`Dropped ${safe.dropped} game events that no longer apply.`);
+        void saveGame(g.setup, safe.events);
+      }
+      setLoaded({ setup: g.setup, events: safe.events });
     });
     return () => {
       alive = false;

@@ -1,14 +1,20 @@
+import { useState } from 'preact/hooks';
 import { ruleUrl, stepDef } from '../engine/flow.ts';
-import { activePlayer, currentStep } from '../engine/reducer.ts';
-import type { GameState, PlayerId } from '../engine/types.ts';
+import { activePlayer, currentStep, unitsOf } from '../engine/reducer.ts';
+import type { GameState, PlayerId, UnitState } from '../engine/types.ts';
 import { t } from '../i18n/index.ts';
 import { Button } from '../ui/Button.tsx';
 import { Counter } from '../ui/Counter.tsx';
 import { SkullIcon } from '../ui/SkullIcon.tsx';
 import styles from './Game.module.css';
+import gameStyles from './game/game.module.css';
+import { PhasePanel } from './game/PhasePanel.tsx';
+import { UnitChips } from './game/UnitChips.tsx';
+import { UnitSheet } from './game/UnitSheet.tsx';
 import { navigate, routeHref } from './router.ts';
 import { Shell } from './Shell.tsx';
 import { useGame, type GameHandle } from './useGame.ts';
+import { useRules } from './useRules.ts';
 import { useWakeLock } from './useWakeLock.ts';
 
 export function Game() {
@@ -42,6 +48,8 @@ export function Game() {
 
 function Board({ game }: { game: GameHandle & { status: 'ready' } }) {
   const { state, events, error, dispatch, undo } = game;
+  const { rules } = useRules();
+  const [openUnitId, setOpenUnitId] = useState<string | null>(null);
   const { setup } = state;
   const step = currentStep(state);
   const def = stepDef(step);
@@ -49,6 +57,14 @@ function Board({ game }: { game: GameHandle & { status: 'ready' } }) {
   const activeName = active ? setup.players[active].name : null;
   const title = t.steps[step].title;
   const phaseName = def.phase ? t.phases[def.phase] : null;
+  const [helpOpen, setHelpOpen] = useState(false);
+  const openUnit = openUnitId ? (state.units[openUnitId] ?? null) : null;
+  // Steps with a unit checklist keep the help short so the checklist stays on screen.
+  const hasPanel =
+    state.unitOrder.length > 0 &&
+    ['command/battleShock', 'movement/move', 'shooting/shoot', 'charge/charge', 'fight/fightsFirst', 'fight/remaining'].includes(step);
+  const openSheet = openUnit?.datasheetId ? rules.sheetById.get(openUnit.datasheetId) : undefined;
+  const hasUnits = state.unitOrder.length > 0;
 
   const endGame = async () => {
     if (!window.confirm(t.game.endConfirm)) return;
@@ -94,7 +110,14 @@ function Board({ game }: { game: GameHandle & { status: 'ready' } }) {
         <section class={`plate ${styles.stepCard}`} aria-live="polite">
           <p class="kicker">{state.finished ? t.game.over : t.game.whatToDo}</p>
           <h2 class={styles.stepHeading}>{state.finished ? t.game.overHelp : title}</h2>
-          {!state.finished && <p class={styles.help}>{t.steps[step].help}</p>}
+          {!state.finished && (
+            <p class={hasPanel && !helpOpen ? styles.helpClamped : styles.help}>{t.steps[step].help}</p>
+          )}
+          {!state.finished && hasPanel && (
+            <button type="button" class={styles.more} onClick={() => setHelpOpen((v) => !v)} aria-expanded={helpOpen}>
+              {helpOpen ? t.game.less : t.game.more}
+            </button>
+          )}
           {step === 'command/cp' && !state.finished && <p class={styles.note}>{t.game.cpApplied}</p>}
           {error && <p class={styles.error}>{t.errors[error]}</p>}
           {!state.finished && (
@@ -103,6 +126,12 @@ function Board({ game }: { game: GameHandle & { status: 'ready' } }) {
             </a>
           )}
         </section>
+
+        {!state.finished && hasUnits && (
+          <section class={`plate plate-dim ${styles.panelCard}`}>
+            <PhasePanel state={state} step={step} rules={rules} dispatch={dispatch} onOpenUnit={(u) => setOpenUnitId(u.id)} />
+          </section>
+        )}
       </div>
 
       <div class={`${styles.right} ${styles.content}`}>
@@ -127,6 +156,27 @@ function Board({ game }: { game: GameHandle & { status: 'ready' } }) {
           ))}
         </section>
 
+        {hasUnits && (
+          <section class={`plate plate-dim ${styles.panelCard}`}>
+            <p class="kicker">{t.play.roster}</p>
+            <div class={gameStyles.roster}>
+              {(['p1', 'p2'] as const).map((p) => (
+                <div key={p} class={gameStyles.group}>
+                  <p class={gameStyles.groupTitle}>
+                    <span class={gameStyles.dot} style={{ background: setup.players[p].color }} />
+                    {setup.players[p].name}
+                  </p>
+                  <ul class={gameStyles.list}>
+                    {unitsOf(state, p).map((u) => (
+                      <RosterRow unit={u} onOpen={() => setOpenUnitId(u.id)} key={u.id} />
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         <div class={styles.leave}>
           <Button href={routeHref({ screen: 'home' })} variant="ghost">
             {t.game.leave}
@@ -136,7 +186,21 @@ function Board({ game }: { game: GameHandle & { status: 'ready' } }) {
           </Button>
         </div>
       </div>
+
+      <UnitSheet unit={openUnit} sheet={openSheet} dispatch={dispatch} onClose={() => setOpenUnitId(null)} />
     </Shell>
+  );
+}
+
+function RosterRow({ unit, onOpen }: { unit: UnitState; onOpen: () => void }) {
+  return (
+    <li class={gameStyles.row}>
+      <button type="button" class={gameStyles.rowMain} onClick={onOpen}>
+        <span class={gameStyles.rowName}>{unit.name}</span>
+        <UnitChips unit={unit} />
+      </button>
+      <span class={`${gameStyles.muted} num`}>{t.play.chips.models(unit.models, unit.startingStrength)}</span>
+    </li>
   );
 }
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { roundSlots, type StepId } from './flow.ts';
-import { activePlayer, apply, check, currentStep, init, needsBattleShockTest, replay, unitsOf } from './reducer.ts';
+import { activePlayer, apply, check, currentStep, init, needsBattleShockTest, replay, replaySafe, unitsOf } from './reducer.ts';
 import { EngineError, type GameEvent, type GameSetup, type GameState, type PlayerId } from './types.ts';
 
 function makeSetup(over: Partial<GameSetup> = {}): GameSetup {
@@ -247,8 +247,11 @@ describe('Shooting and Charge phases', () => {
     s = apply(s, { t: 'charge/declare', unitId: 'm1' });
     s = apply(s, { t: 'charge/roll', unitId: 'm1', roll: 3 });
     s = apply(s, { t: 'charge/resolve', unitId: 'm1', targetIds: [], success: false });
-    expect(s.units.m1).toMatchObject({ charged: false, fightsFirst: false });
+    expect(s.units.m1).toMatchObject({ charged: false, fightsFirst: false, chargeResolved: true });
     expect(code(s, { t: 'charge/declare', unitId: 'm1' })).toBe('alreadyCharged');
+    expect(code(s, { t: 'charge/resolve', unitId: 'm1', targetIds: ['o1'], success: true })).toBe('alreadyCharged');
+    s = goTo(s, 'charge/charge', 'p2');
+    expect(s.units.m1?.chargeResolved).toBe(false);
   });
 });
 
@@ -355,6 +358,15 @@ describe('event sourcing', () => {
     push(next);
     expect(replay(setup, events)).toEqual(s);
     expect(replay(setup, events.slice(0, -2))).toEqual(before);
+  });
+
+  it('replaySafe keeps the valid prefix of a broken log', () => {
+    const setup = makeSetup();
+    const events: GameEvent[] = [next, next, { t: 'unit/move', unitId: 'm1', moveType: 'normal' }, next];
+    const r = replaySafe(setup, events);
+    expect(r.events).toEqual([next, next]);
+    expect(r.dropped).toBe(2);
+    expect(r.state).toEqual(replay(setup, [next, next]));
   });
 
   it('apply never mutates its input', () => {

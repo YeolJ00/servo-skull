@@ -20,6 +20,8 @@ export interface UnitSetup {
   models: number;
   /** Leadership characteristic, used for battle-shock tests (08.03). */
   ld: number;
+  /** Wahapedia datasheet id, so the UI can show stats and weapons. The engine never reads it. */
+  datasheetId?: string | undefined;
 }
 
 export interface GameSetup {
@@ -42,6 +44,7 @@ export interface UnitState {
   models: number;
   startingStrength: number;
   ld: number;
+  datasheetId: string | null;
   destroyed: boolean;
 
   // Until a test passes (08.03).
@@ -54,6 +57,8 @@ export interface UnitState {
   selectedToFight: boolean;
   declaredCharge: boolean;
   chargeRoll: number | null;
+  /** The charge was resolved this phase, whether it succeeded or failed. */
+  chargeResolved: boolean;
 
   // Turn flags: cleared at the end of the turn.
   advanced: boolean;

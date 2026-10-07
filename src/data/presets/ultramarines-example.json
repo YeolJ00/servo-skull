@@ -1,0 +1,11 @@
+{
+  "name": "Ultramarines example",
+  "factionIds": ["SM"],
+  "pointsLimit": 500,
+  "units": [
+    { "name": "Captain", "models": 1 },
+    { "name": "Intercessor Squad", "models": 5 },
+    { "name": "Assault Intercessor Squad", "models": 5 },
+    { "name": "Infernus Squad", "models": 5 }
+  ]
+}

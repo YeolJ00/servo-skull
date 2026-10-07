@@ -1,8 +1,9 @@
-import { t } from '../i18n/index.ts';
+import { Armies } from './Armies.tsx';
+import { ArmyEditor } from './ArmyEditor.tsx';
 import { Game } from './Game.tsx';
 import { GameSetup } from './GameSetup.tsx';
 import { Home } from './Home.tsx';
-import { Placeholder } from './Placeholder.tsx';
+import { Import } from './Import.tsx';
 import { useRoute } from './router.ts';
 
 export function App() {
@@ -11,10 +12,11 @@ export function App() {
     case 'home':
       return <Home />;
     case 'import':
-      return <Placeholder title={t.nav.import} body={t.placeholder.import} />;
+      return <Import />;
     case 'armies':
+      return <Armies />;
     case 'army':
-      return <Placeholder title={t.nav.armies} body={t.placeholder.armies} />;
+      return <ArmyEditor armyId={route.armyId} />;
     case 'setup':
       return <GameSetup />;
     case 'game':

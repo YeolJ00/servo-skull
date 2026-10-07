@@ -28,6 +28,7 @@ function newUnit(u: UnitSetup): UnitState {
     models: u.models,
     startingStrength: u.models,
     ld: u.ld,
+    datasheetId: u.datasheetId ?? null,
     destroyed: u.models <= 0,
     battleShocked: false,
     battleShockTested: false,
@@ -36,6 +37,7 @@ function newUnit(u: UnitSetup): UnitState {
     selectedToFight: false,
     declaredCharge: false,
     chargeRoll: null,
+    chargeResolved: false,
     advanced: false,
     fellBack: false,
     remainedStationary: false,
@@ -62,6 +64,28 @@ export function init(setup: GameSetup): GameState {
 
 export function replay(setup: GameSetup, events: readonly GameEvent[]): GameState {
   return events.reduce(apply, init(setup));
+}
+
+/**
+ * Replays as far as the log is valid. A log written by an older engine, or corrupted storage,
+ * stops at the first event that no longer applies instead of losing the whole game.
+ */
+export function replaySafe(
+  setup: GameSetup,
+  events: readonly GameEvent[],
+): { state: GameState; events: GameEvent[]; dropped: number } {
+  let state = init(setup);
+  const kept: GameEvent[] = [];
+  for (const e of events) {
+    try {
+      state = apply(state, e);
+      kept.push(e);
+    } catch (err) {
+      if (err instanceof EngineError) break;
+      throw err;
+    }
+  }
+  return { state, events: kept, dropped: events.length - kept.length };
 }
 
 export function currentSlot(state: GameState): RoundSlot {
@@ -164,6 +188,7 @@ function clearPhaseFlags(u: UnitState): UnitState {
     selectedToFight: false,
     declaredCharge: false,
     chargeRoll: null,
+    chargeResolved: false,
   };
 }
 
@@ -302,6 +327,7 @@ function chargeResolve(state: GameState, unitId: string, targetIds: string[], su
   const u = ownActiveUnit(state, unitId, 'charge/charge');
   if (!u.declaredCharge) fail('notDeclared');
   if (u.chargeRoll === null) fail('noRoll');
+  if (u.chargeResolved) fail('alreadyCharged');
   if (success) {
     if (targetIds.length === 0) fail('needTargets');
     for (const id of targetIds) {
@@ -310,7 +336,7 @@ function chargeResolve(state: GameState, unitId: string, targetIds: string[], su
     }
   }
   // 11.02: a unit that makes a charge move has Fights First until the end of the turn.
-  return withUnit(state, { ...u, charged: success, fightsFirst: u.fightsFirst || success });
+  return withUnit(state, { ...u, chargeResolved: true, charged: success, fightsFirst: u.fightsFirst || success });
 }
 
 // ---- Fight phase ----

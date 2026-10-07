@@ -89,8 +89,29 @@
   text-shadow: var(--glow);
 }
 
-.help {
+.help,
+.helpClamped {
   font-size: var(--text-lg);
+}
+
+.helpClamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.more {
+  justify-self: start;
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary-bright);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .note {
@@ -116,6 +137,12 @@
 .counters {
   display: grid;
   gap: var(--space-4);
+}
+
+.panelCard {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
 }
 
 .playerBlock {

@@ -23,7 +23,7 @@ npm test           # Vitest: engine, dice, importer
 npm run check      # tsc --noEmit + eslint
 npm run build      # production build to dist/
 npm run preview    # serve dist/ locally
-npm run pack -- --factions space-marines,orks   # build a rules pack (needs network)
+npm run pack -- --factions SM,ORK --name "Space Marines + Orks"   # build packs/sm-ork.pack.json (needs network once; add --refresh to re-download)
 npm run icons      # rasterize public/icon.svg into public/icons/*.png with headless Chrome
 node scripts/screenshot.mjs --url http://localhost:4173/servo-skull/#/game --out shot.png --size 390x844 --scheme dark [--seed game.json]
                    # headless Chrome screenshot at a phone/tablet size; --seed writes a saved game into IndexedDB first
@@ -78,6 +78,7 @@ The source is Wahapedia's 11th edition data export: CSV files linked by IDs.
 
 - Page: https://wahapedia.ru/wh40k11ed/the-rules/data-export
 - The spec workbook (`Export Data Specs.xlsx`) is linked from that page. Read it before writing the importer. Do not guess file names, delimiters, or columns.
+- What the export looks like (checked 2026-10-07 against the 2026-09-28 data): files at `https://wahapedia.ru/wh40k11ed/<Name>.csv`, `|` delimited, UTF-8 with a BOM, every row ends with a trailing `|`, HTML in text fields. Faction ids are short codes (`SM`, `ORK`). `Datasheets_models.csv` has M, T, Sv, inv_sv, W, Ld, OC per model line; Ld is a target like `6+`. `Datasheets_models_cost.csv` mixes header rows ("YOUR UNIT COSTS") with tiers ("10 models|90"). `Stratagems.csv` has `phase` and `turn` columns. `Last_update.csv` holds the stamp.
 
 How it flows:
 
@@ -342,16 +343,13 @@ Unit tests (Vitest) get most of the effort.
 
 ## Roadmap
 
-- **M0 Scaffold:** Vite + TS + Preact, PWA manifest, tokens, app shell (header and bottom bar), deploy workflow.
-- **M1 Turn tracker:** `flow.ts`, reducer, undo, persistence. Game screen with the step card and CP/VP counters.
-- **M2 Dice:** attack sequence module, plus a dice sheet with digital and physical entry.
-- **M3 Rules data and army selector:** build-pack script, Import screen, army editor, presets, game setup.
-- **M4 Integration:**
-  - Units in the game state.
-  - An attack helper that takes datasheet weapons against a target unit.
-  - Wound tracking.
-  - Battle-shock prompts.
-  - Phase-filtered stratagems.
+Status as of 2026-10-07:
+
+- **M0 Scaffold:** done. Vite + TS + Preact, PWA manifest, tokens, app shell (header and bottom bar), deploy workflow.
+- **M1 Turn tracker:** done. `flow.ts`, reducer, undo, persistence. Game screen with the step card and CP/VP counters.
+- **M2 Dice:** partly. `dice/rng.ts` and `dice/roll.ts` (D6, D3, 2D6, pools, face counts) plus the `DiceRoll` control with digital and physical entry, used for battle-shock, advance, and charge rolls. Still to do: the attack sequence (hit, wound, save, damage) and the pool face-counter entry.
+- **M3 Rules data and army selector:** done. `scripts/build-pack.ts`, pure importer in `src/data/import/`, Import screen, Armies list, army editor (faction, detachment, ally, points limit, model steppers, warnings, JSON export/import), example presets, army pick in game setup.
+- **M4 Integration:** partly. Units are in the game state with per-phase checklists (battle-shock tests, moves with advance rolls, shooting types, declare-roll-targets charges, alternating fights), a unit sheet with casualties and datasheet stats and weapons, and a roster with status chips. Still to do: wound tracking per model, an attack helper that uses datasheet weapons, phase-filtered stratagems (the pack has `phase` and `turn` per stratagem, so no overlay file is needed).
 - **Later (not now):** missions and scoring, voice, camera, projector.
 
 ## Decisions

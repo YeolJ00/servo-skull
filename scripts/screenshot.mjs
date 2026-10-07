@@ -33,14 +33,18 @@ await withPage(
       const loaded = once('Page.loadEventFired');
       await send('Page.navigate', { url: `${origin.origin}/favicon.ico` });
       await loaded;
+      // A seed file is either a saved game (stored under game:current) or, when it has a top-level
+      // "__keys" object, a map of IndexedDB key → value to store as-is (packs, armies, game).
       const seed = JSON.parse(readFileSync(args.seed, 'utf8'));
+      const entries = seed && typeof seed === 'object' && seed.__keys ? seed.__keys : { 'game:current': seed };
       const expr = `new Promise((resolve, reject) => {
         const req = indexedDB.open('keyval-store', 1);
         req.onupgradeneeded = () => req.result.createObjectStore('keyval');
         req.onerror = () => reject(req.error);
         req.onsuccess = () => {
           const tx = req.result.transaction('keyval', 'readwrite');
-          tx.objectStore('keyval').put(${JSON.stringify(seed)}, 'game:current');
+          const entries = ${JSON.stringify(entries)};
+          for (const [k, v] of Object.entries(entries)) tx.objectStore('keyval').put(v, k);
           tx.oncomplete = () => resolve('ok');
           tx.onerror = () => reject(tx.error);
         };
