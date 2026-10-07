@@ -7,6 +7,7 @@ import type { Rules } from '../data/rules.ts';
 import { expandModels } from '../data/unitStats.ts';
 import type { GameSetup as Setup, PlayerId, PlayerSetup, UnitSetup } from '../engine/types.ts';
 import { t } from '../i18n/index.ts';
+import { BottomSheet } from '../ui/BottomSheet.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Counter } from '../ui/Counter.tsx';
 import styles from './GameSetup.module.css';
@@ -83,6 +84,7 @@ export function GameSetup() {
   const [startingCp, setStartingCp] = useState(0);
   const [hasGame, setHasGame] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
+  const [editing, setEditing] = useState<PlayerId | null>(null);
 
   useEffect(() => {
     void loadGame().then((g) => setHasGame(!!g));
@@ -131,30 +133,73 @@ export function GameSetup() {
     navigate({ screen: 'game' });
   };
 
+  const armyName = (id: PlayerId) => armies.find((a) => a.id === armyIds[id])?.name ?? t.setup.noArmy;
+  const label = (id: PlayerId) => (id === 'p1' ? t.setup.player1 : t.setup.player2);
+
   return (
     <Shell
+      fixed
       header={<h1>{t.nav.setup}</h1>}
       footer={
-        <>
+        <div class={styles.bar}>
           <Button href={routeHref({ screen: 'home' })} variant="ghost">
             {t.nav.back}
           </Button>
           <Button variant="primary" onClick={() => void start()}>
             {warning ? t.setup.startAnyway : t.setup.start}
           </Button>
-        </>
+        </div>
       }
     >
-      <div class={styles.form}>
+      <div class={`scroll ${styles.form}`}>
         {hasGame && <p class={styles.warning}>{t.setup.replaceWarning}</p>}
         {warning && <p class={styles.warning}>{warning}</p>}
 
         {(['p1', 'p2'] as const).map((id) => (
-          <section class={`plate plate-dim ${styles.player}`} key={id}>
-            <h2 class={styles.playerTitle}>{id === 'p1' ? t.setup.player1 : t.setup.player2}</h2>
+          <button type="button" class={`plate plate-dim ${styles.playerRow}`} key={id} onClick={() => setEditing(id)}>
+            <span class={styles.swatchBig} style={{ background: players[id].color }} />
+            <span class={styles.playerText}>
+              <span class={styles.playerLabel}>{label(id)}</span>
+              <span class={styles.playerName}>{players[id].name || label(id)}</span>
+              <span class={styles.hint}>{armyName(id)}</span>
+            </span>
+            <span class={styles.edit}>{t.setup.edit}</span>
+          </button>
+        ))}
+        {armies.length === 0 && (
+          <p class={styles.hint}>
+            {t.setup.noArmiesHint} <a href={routeHref({ screen: 'armies' })}>{t.nav.armies}</a>
+          </p>
+        )}
+
+        <section class={`plate plate-dim ${styles.settings}`}>
+          <p class={styles.playerLabel}>{t.setup.firstPlayer}</p>
+          <div class={styles.segmented} role="radiogroup" aria-label={t.setup.firstPlayer}>
+            {(['p1', 'p2'] as const).map((id) => (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={firstPlayer === id}
+                class={firstPlayer === id ? styles.segmentOn : styles.segment}
+                onClick={() => setFirstPlayer(id)}
+              >
+                <span class={styles.dot} style={{ background: players[id].color }} />
+                {players[id].name || label(id)}
+              </button>
+            ))}
+          </div>
+          <Counter label={t.setup.rounds} value={rounds} min={1} max={10} onChange={setRounds} />
+          <Counter label={t.setup.startingCp} value={startingCp} min={0} max={12} onChange={setStartingCp} />
+        </section>
+      </div>
+
+      <BottomSheet open={editing !== null} title={editing ? label(editing) : ''} onClose={() => setEditing(null)}>
+        {editing && (
+          <div class={styles.sheet}>
             <label class={styles.field}>
               <span>{t.setup.army}</span>
-              <select class={styles.input} value={armyIds[id]} onChange={(e) => pickArmy(id, (e.currentTarget as HTMLSelectElement).value)}>
+              <select class={styles.input} value={armyIds[editing]} onChange={(e) => pickArmy(editing, (e.currentTarget as HTMLSelectElement).value)}>
                 <option value="">{t.setup.noArmy}</option>
                 {armies.map((a) => (
                   <option value={a.id} key={a.id}>
@@ -168,9 +213,9 @@ export function GameSetup() {
               <input
                 class={styles.input}
                 type="text"
-                value={players[id].name}
+                value={players[editing].name}
                 maxLength={24}
-                onInput={(e) => update(id, { name: (e.currentTarget as HTMLInputElement).value })}
+                onInput={(e) => update(editing, { name: (e.currentTarget as HTMLInputElement).value })}
               />
             </label>
             <div class={styles.field}>
@@ -181,50 +226,22 @@ export function GameSetup() {
                     key={c}
                     type="button"
                     role="radio"
-                    aria-checked={players[id].color === c}
+                    aria-checked={players[editing].color === c}
                     aria-label={c}
-                    class={players[id].color === c ? styles.swatchOn : styles.swatch}
+                    class={players[editing].color === c ? styles.swatchOn : styles.swatch}
                     style={{ background: c }}
-                    onClick={() => update(id, { color: c })}
+                    onClick={() => update(editing, { color: c })}
                   />
                 ))}
               </div>
             </div>
-          </section>
-        ))}
-        {armies.length === 0 && (
-          <p class={styles.hint}>
-            {t.setup.noArmiesHint}{' '}
-            <a href={routeHref({ screen: 'armies' })}>{t.nav.armies}</a>
-          </p>
-        )}
-
-        <section class={`plate plate-dim ${styles.player}`}>
-          <p class={styles.playerTitle}>{t.setup.firstPlayer}</p>
-          <div class={styles.segmented} role="radiogroup" aria-label={t.setup.firstPlayer}>
-            {(['p1', 'p2'] as const).map((id) => (
-              <button
-                key={id}
-                type="button"
-                role="radio"
-                aria-checked={firstPlayer === id}
-                class={firstPlayer === id ? styles.segmentOn : styles.segment}
-                onClick={() => setFirstPlayer(id)}
-              >
-                <span class={styles.dot} style={{ background: players[id].color }} />
-                {players[id].name || (id === 'p1' ? t.setup.player1 : t.setup.player2)}
-              </button>
-            ))}
+            <p class={styles.hint}>{t.setup.firstPlayerHint}</p>
+            <Button variant="primary" block onClick={() => setEditing(null)}>
+              {t.editor.done}
+            </Button>
           </div>
-          <p class={styles.hint}>{t.setup.firstPlayerHint}</p>
-        </section>
-
-        <section class={`plate plate-dim ${styles.player}`}>
-          <Counter label={t.setup.rounds} value={rounds} min={1} max={10} onChange={setRounds} />
-          <Counter label={t.setup.startingCp} value={startingCp} min={0} max={12} onChange={setStartingCp} />
-          <p class={styles.hint}>{t.setup.startingCpHint}</p>
-        </section>
-      </div>
+        )}
+      </BottomSheet>
     </Shell>
   );
 }

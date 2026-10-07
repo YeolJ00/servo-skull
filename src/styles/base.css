@@ -140,6 +140,26 @@ textarea {
   --plate-edge: var(--line);
 }
 
+/* Inside a fixed shell: the one region that scrolls. */
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Small icon button, 48px target. */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch);
+  height: var(--touch);
+  border: 0;
+  background: transparent;
+  color: var(--primary-bright);
+  cursor: pointer;
+}
+
 /* Section kicker: small inscriptional caps between two hairlines. */
 .kicker {
   display: flex;

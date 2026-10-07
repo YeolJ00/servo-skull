@@ -1,9 +1,26 @@
+.page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-4);
+  overflow-y: auto;
+}
+
 .hero {
+  position: relative;
   display: grid;
   justify-items: center;
-  gap: var(--space-2);
-  padding: var(--space-5) 0 var(--space-4);
+  gap: var(--space-1);
+  padding: var(--space-3) 0 var(--space-2);
   text-align: center;
+}
+
+.settingsBtn {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .skull {
@@ -14,14 +31,13 @@
 .title {
   font-family: var(--font-title);
   font-weight: 700;
-  font-size: 2.25rem;
+  font-size: 2.1rem;
   letter-spacing: 0.08em;
   color: var(--text);
 }
 
 .tagline {
   color: var(--text-muted);
-  font-size: var(--text-lg);
 }
 
 /* Hairline rule with a brass diamond at the centre. */
@@ -52,28 +68,19 @@
 
 .menu {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--space-3);
   max-width: 480px;
-  margin: var(--space-4) auto 0;
   width: 100%;
-}
-
-.item {
-  display: grid;
-  gap: var(--space-2);
+  margin: 0 auto;
 }
 
 .hint {
   color: var(--text-muted);
-  text-align: center;
 }
 
 .settings {
   display: grid;
   gap: var(--space-3);
-  max-width: 480px;
-  width: 100%;
-  margin: var(--space-6) auto 0;
 }
 
 .segmented {
@@ -110,7 +117,13 @@
 }
 
 .credit {
-  margin-top: var(--space-6);
   text-align: center;
   color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+@media (max-height: 520px) {
+  .hero {
+    display: none;
+  }
 }

@@ -1,16 +1,115 @@
-.page {
-  display: grid;
-  gap: var(--space-5);
-  max-width: 600px;
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
-.section {
+.headText {
+  flex: 1;
+  min-width: 0;
   display: grid;
+  gap: 1px;
+}
+
+.headTitle {
+  font-size: var(--text-xl);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.headMeta {
+  font-family: var(--font-display);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.warnBtn {
+  position: relative;
+  color: var(--on-danger);
+}
+
+.badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--danger);
+  color: var(--on-danger);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.bar {
+  display: flex;
+  justify-content: space-between;
   gap: var(--space-3);
 }
 
-.section.plate {
-  padding: var(--space-4);
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.units {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* A unit as one tappable row; models, leader and removal live in its sheet. */
+.unit {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 64px;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.unitText {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.unitName {
+  font-family: var(--font-title);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--primary-bright);
+}
+
+.unitPoints {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+}
+
+.sheet {
+  display: grid;
+  gap: var(--space-3);
 }
 
 .field {
@@ -61,52 +160,6 @@
   border-color: var(--primary-bright);
 }
 
-.totals {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.totals > p:first-child {
-  flex: 1;
-}
-
-.points {
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: 700;
-  color: var(--primary-bright);
-}
-
-.unit {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-}
-
-.unitHead {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  align-items: flex-start;
-}
-
-.unitName {
-  font-family: var(--font-title);
-  font-size: 1.05rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--primary-bright);
-}
-
-.unitPoints {
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: 700;
-  white-space: nowrap;
-}
-
 .unitActions {
   display: flex;
   justify-content: space-between;
@@ -116,11 +169,6 @@
 
 .muted {
   color: var(--text-muted);
-}
-
-.warnings {
-  display: grid;
-  gap: var(--space-2);
 }
 
 .warning {
@@ -133,6 +181,8 @@
   display: flex;
   justify-content: space-between;
   gap: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--line);
 }
 
 .search {

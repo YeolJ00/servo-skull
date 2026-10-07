@@ -71,6 +71,7 @@ export function Import() {
 
   return (
     <Shell
+      fixed
       header={<h1>{t.nav.import}</h1>}
       footer={
         <Button href={routeHref({ screen: 'home' })} variant="ghost">
@@ -78,7 +79,7 @@ export function Import() {
         </Button>
       }
     >
-      <div class={styles.page}>
+      <div class={`scroll ${styles.page}`}>
         {message && <p class={message.kind === 'ok' ? styles.ok : styles.error}>{message.text}</p>}
 
         <section class={styles.list}>

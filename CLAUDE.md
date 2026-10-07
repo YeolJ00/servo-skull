@@ -273,6 +273,7 @@ The Game screen never scrolls the page (`Shell fixed`): the step card is compact
 
 **Layout and interaction**
 
+- No screen scrolls the page. Every screen uses `Shell fixed`: one `.scroll` region (the list or checklist) scrolls inside, the header and thumb bar stay put. Secondary content and settings open in bottom sheets (`BottomSheet`, portalled to the body) from icon buttons: Home has a settings gear (theme), Setup edits each player in a sheet, Armies adds from a sheet, the army editor keeps army settings, warnings (badge count) and unit details in sheets, the Game screen has the four-panel toolbar. When adding a feature, add a sheet or a tab, never a section that grows the page.
 - On a tablet in landscape (≥ 900px wide), use two panes: the turn tracker on the left, details and dice on the right.
 - Touch targets ≥ 48px. The primary action sits bottom-right, within thumb reach. Nothing depends on hover.
 - Details open in bottom sheets, not new pages, and only one sheet is open at a time.
