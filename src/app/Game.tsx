@@ -8,7 +8,9 @@ import { Counter } from '../ui/Counter.tsx';
 import { SkullIcon } from '../ui/SkullIcon.tsx';
 import styles from './Game.module.css';
 import gameStyles from './game/game.module.css';
+import { GameLog } from './game/GameLog.tsx';
 import { PhasePanel } from './game/PhasePanel.tsx';
+import { StratagemPanel } from './game/StratagemPanel.tsx';
 import { UnitChips } from './game/UnitChips.tsx';
 import { UnitSheet } from './game/UnitSheet.tsx';
 import { navigate, routeHref } from './router.ts';
@@ -58,12 +60,12 @@ function Board({ game }: { game: GameHandle & { status: 'ready' } }) {
   const title = t.steps[step].title;
   const phaseName = def.phase ? t.phases[def.phase] : null;
   const [helpOpen, setHelpOpen] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);
   const openUnit = openUnitId ? (state.units[openUnitId] ?? null) : null;
   // Steps with a unit checklist keep the help short so the checklist stays on screen.
   const hasPanel =
     state.unitOrder.length > 0 &&
     ['command/battleShock', 'movement/move', 'shooting/shoot', 'charge/charge', 'fight/fightsFirst', 'fight/remaining'].includes(step);
-  const openSheet = openUnit?.datasheetId ? rules.sheetById.get(openUnit.datasheetId) : undefined;
   const hasUnits = state.unitOrder.length > 0;
 
   const endGame = async () => {
@@ -177,7 +179,17 @@ function Board({ game }: { game: GameHandle & { status: 'ready' } }) {
           </section>
         )}
 
+        {!state.finished && rules.stratagems.length > 0 && (
+          <section class={`plate plate-dim ${styles.panelCard}`}>
+            <p class="kicker">{t.play.strat.title}</p>
+            <StratagemPanel state={state} rules={rules} dispatch={dispatch} />
+          </section>
+        )}
+
         <div class={styles.leave}>
+          <Button variant="ghost" onClick={() => setLogOpen(true)}>
+            {t.log.open}
+          </Button>
           <Button href={routeHref({ screen: 'home' })} variant="ghost">
             {t.game.leave}
           </Button>
@@ -187,7 +199,8 @@ function Board({ game }: { game: GameHandle & { status: 'ready' } }) {
         </div>
       </div>
 
-      <UnitSheet unit={openUnit} sheet={openSheet} dispatch={dispatch} onClose={() => setOpenUnitId(null)} />
+      <UnitSheet unit={openUnit} rules={rules} dispatch={dispatch} onClose={() => setOpenUnitId(null)} />
+      <GameLog open={logOpen} setup={setup} events={events} onClose={() => setLogOpen(false)} />
     </Shell>
   );
 }

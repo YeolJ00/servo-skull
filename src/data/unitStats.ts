@@ -1,6 +1,6 @@
 // Per-model stats for a unit of a given size, derived from a datasheet's composition and profiles.
 // Pure. Used to seed wounds in the engine and to build attack targets.
-import { parseTarget, type Datasheet, type ModelProfile } from './pack.ts';
+import { abilityParameter, parseTarget, type Datasheet, type ModelProfile } from './pack.ts';
 
 export interface ModelStats {
   name: string;
@@ -9,9 +9,11 @@ export interface ModelStats {
   sv: number;
   invSv: number | null;
   character: boolean;
+  /** Feel No Pain X+ from the datasheet (24.12), or null. */
+  fnp: number | null;
 }
 
-function statsOf(profile: ModelProfile | undefined, character: boolean): ModelStats {
+function statsOf(profile: ModelProfile | undefined, character: boolean, fnp: number | null): ModelStats {
   return {
     name: profile?.name ?? '',
     w: parseTarget(profile?.w ?? '') ?? (Number(profile?.w) || 1),
@@ -19,7 +21,20 @@ function statsOf(profile: ModelProfile | undefined, character: boolean): ModelSt
     sv: parseTarget(profile?.sv ?? '') ?? 7,
     invSv: parseTarget(profile?.invSv ?? '') ?? null,
     character,
+    fnp,
   };
+}
+
+/** Feel No Pain value on a datasheet, e.g. 5 for "Feel No Pain 5+". */
+export function feelNoPainOf(sheet: Pick<Datasheet, 'abilities'>): number | null {
+  return parseTarget(abilityParameter(sheet, 'Feel No Pain') ?? '') ?? null;
+}
+
+/** The Damaged threshold (24.39) applies when a single-model unit's wounds are at or below it. */
+export function isDamaged(sheet: Pick<Datasheet, 'damagedW'>, wounds: number[]): boolean {
+  if (sheet.damagedW === null || wounds.length !== 1) return false;
+  const w = wounds[0] ?? 0;
+  return w > 0 && w <= sheet.damagedW;
 }
 
 /**
@@ -29,8 +44,9 @@ function statsOf(profile: ModelProfile | undefined, character: boolean): ModelSt
  */
 export function expandModels(sheet: Datasheet, count: number): ModelStats[] {
   const character = sheet.keywords.some((k) => k.toLowerCase() === 'character');
+  const fnp = feelNoPainOf(sheet);
   if (sheet.models.length <= 1 || sheet.composition.length === 0) {
-    return Array.from({ length: count }, () => statsOf(sheet.models[0], character));
+    return Array.from({ length: count }, () => statsOf(sheet.models[0], character, fnp));
   }
   const lines = sheet.composition.map((line) => {
     const text = line.description.toLowerCase();
@@ -53,6 +69,6 @@ export function expandModels(sheet: Datasheet, count: number): ModelStats[] {
   }
   // Leaders of the squad (the first line, e.g. Sergeant or Nob) come first so casualties from the end hit the rank and file.
   const out: ModelStats[] = [];
-  for (const l of lines) for (let i = 0; i < l.n; i++) out.push(statsOf(l.profile ?? sheet.models[0], character));
+  for (const l of lines) for (let i = 0; i < l.n; i++) out.push(statsOf(l.profile ?? sheet.models[0], character, fnp));
   return out;
 }

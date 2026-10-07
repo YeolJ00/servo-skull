@@ -12,6 +12,7 @@ import {
   type MoveType,
   type PlayerId,
   type ShootingType,
+  type StratagemUse,
   type UnitSetup,
   type UnitState,
 } from './types.ts';
@@ -22,6 +23,7 @@ function fail(code: EngineErrorCode): never {
 
 function newUnit(u: UnitSetup): UnitState {
   const maxWounds = Array.from({ length: u.models }, (_, i) => Math.max(1, u.modelWounds?.[i] ?? 1));
+  const character = Array.from({ length: u.models }, (_, i) => u.modelCharacter?.[i] ?? false);
   return {
     id: u.id,
     name: u.name,
@@ -32,11 +34,14 @@ function newUnit(u: UnitSetup): UnitState {
     datasheetId: u.datasheetId ?? null,
     wounds: [...maxWounds],
     maxWounds,
+    character,
+    parts: u.parts ?? (u.datasheetId ? [{ datasheetId: u.datasheetId, name: u.name, models: u.models }] : []),
     destroyed: u.models <= 0,
     battleShocked: false,
     battleShockTested: false,
     selectedToMove: false,
     selectedToShoot: false,
+    shootingType: null,
     selectedToFight: false,
     declaredCharge: false,
     chargeRoll: null,
@@ -62,6 +67,7 @@ export function init(setup: GameSetup): GameState {
     units,
     unitOrder: setup.units.map((u) => u.id),
     fight: { nextPlayer: setup.firstPlayer },
+    stratagemsUsed: [],
   };
 }
 
@@ -172,7 +178,33 @@ export function apply(state: GameState, event: GameEvent): GameState {
       return fight(state, event.unitId);
     case 'fight/pass':
       return fightPass(state, event.player);
+    case 'stratagem/use':
+      return useStratagem(state, event.player, event.stratagemId, event.name, event.cp);
   }
+}
+
+// ---- 15.01 Stratagems ----
+
+/** Same phase: same round, same slot phase and same turn. Round start/end count as their own "phase". */
+function samePhase(state: GameState, use: StratagemUse): boolean {
+  if (use.round !== state.pos.round) return false;
+  const slots = roundSlots(state.setup.firstPlayer);
+  const a = slots[use.index];
+  const b = slots[state.pos.index];
+  if (!a || !b) return false;
+  return a.player === b.player && phaseOf(a.step) === phaseOf(b.step);
+}
+
+// 15.01: pay the CP; a player cannot use the same stratagem more than once in the same phase.
+function useStratagem(state: GameState, player: PlayerId, stratagemId: string, name: string, cp: number): GameState {
+  if (state.finished) fail('finished');
+  if (!stratagemId || !Number.isInteger(cp) || cp < 0) fail('badStratagem');
+  if (state.cp[player] < cp) fail('cpNegative');
+  if (state.stratagemsUsed.some((u) => u.player === player && u.stratagemId === stratagemId && samePhase(state, u))) {
+    fail('stratagemUsedThisPhase');
+  }
+  const use: StratagemUse = { player, stratagemId, name, cp, round: state.pos.round, index: state.pos.index };
+  return { ...state, cp: { ...state.cp, [player]: state.cp[player] - cp }, stratagemsUsed: [...state.stratagemsUsed, use] };
 }
 
 // ---- helpers ----
@@ -193,14 +225,19 @@ function withWounds(u: UnitState, wounds: number[]): UnitState {
   return { ...u, wounds, models, destroyed: models === 0 };
 }
 
-/** Wounds array for a target model count: casualties are removed from the end, revivals restore from the end. */
+/**
+ * Wounds array for a target model count: casualties are removed from the end, non-characters
+ * before characters (05.03 allocation keeps characters last); revivals restore from the end.
+ */
 function setModelCount(u: UnitState, models: number): number[] {
   const wounds = [...u.wounds];
   let alive = wounds.filter((w) => w > 0).length;
-  for (let i = wounds.length - 1; i >= 0 && alive > models; i--) {
-    if ((wounds[i] ?? 0) > 0) {
-      wounds[i] = 0;
-      alive--;
+  for (const pass of [false, true]) {
+    for (let i = wounds.length - 1; i >= 0 && alive > models; i--) {
+      if ((wounds[i] ?? 0) > 0 && (u.character[i] ?? false) === pass) {
+        wounds[i] = 0;
+        alive--;
+      }
     }
   }
   for (let i = wounds.length - 1; i >= 0 && alive < models; i--) {
@@ -227,6 +264,7 @@ function clearPhaseFlags(u: UnitState): UnitState {
     battleShockTested: false,
     selectedToMove: false,
     selectedToShoot: false,
+    shootingType: null,
     selectedToFight: false,
     declaredCharge: false,
     chargeRoll: null,
@@ -342,6 +380,7 @@ function shoot(state: GameState, unitId: string, shootingType: ShootingType): Ga
   return withUnit(state, {
     ...u,
     selectedToShoot: true,
+    shootingType,
     lastRangedAttackTurn: globalTurnIndex(state.setup, state.pos),
   });
 }

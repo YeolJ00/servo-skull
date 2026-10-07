@@ -25,26 +25,49 @@ const DEFAULTS: Record<PlayerId, PlayerSetup> = {
 // Leadership when a unit has no datasheet: the host cannot know it, so the players are told to check.
 const UNKNOWN_LD = 7;
 
-/** Builds the engine's unit list from an army. Units without a datasheet are kept with a warning. */
+/**
+ * Builds the engine's unit list from an army. Units without a datasheet are kept with a warning.
+ * A leader attached to a bodyguard unit (19.01) becomes one unit: bodyguard models first, then
+ * the leader's, so casualties by count and allocation reach the leader last.
+ */
 export function unitsFromArmy(army: ArmyList, owner: PlayerId, rules: Rules): { units: UnitSetup[]; unknown: string[] } {
   const units: UnitSetup[] = [];
   const unknown: string[] = [];
   const seen = new Map<string, number>();
+  const leaderOf = new Map<string, typeof army.units>();
+  for (const u of army.units) {
+    if (u.attachedTo && army.units.some((b) => b.key === u.attachedTo)) {
+      const list = leaderOf.get(u.attachedTo) ?? [];
+      list.push(u);
+      leaderOf.set(u.attachedTo, list);
+    }
+  }
+  const attachedLeaders = new Set([...leaderOf.values()].flat().map((u) => u.key));
+
   army.units.forEach((u, i) => {
-    const { sheet } = resolveUnit(u, rules);
-    const n = (seen.get(u.name) ?? 0) + 1;
-    seen.set(u.name, n);
-    const name = n > 1 ? `${u.name} ${n}` : u.name;
-    const ld = sheet ? parseTarget(sheet.models[0]?.ld ?? '') : undefined;
-    if (!sheet || ld === undefined) unknown.push(u.name);
+    if (attachedLeaders.has(u.key)) return; // folded into its bodyguard unit below
+    const members = [u, ...(leaderOf.get(u.key) ?? [])];
+    const resolved = members.map((m) => ({ unit: m, sheet: resolveUnit(m, rules).sheet }));
+    const baseName = members.map((m) => m.name).join(' + ');
+    const n = (seen.get(baseName) ?? 0) + 1;
+    seen.set(baseName, n);
+    const name = n > 1 ? `${baseName} ${n}` : baseName;
+    const first = resolved[0];
+    const ld = first?.sheet ? parseTarget(first.sheet.models[0]?.ld ?? '') : undefined;
+    for (const r of resolved) if (!r.sheet) unknown.push(r.unit.name);
+    if (ld === undefined && first?.sheet) unknown.push(first.unit.name);
+    const stats = resolved.flatMap((r) => (r.sheet ? expandModels(r.sheet, r.unit.models) : Array.from({ length: r.unit.models }, () => null)));
     units.push({
       id: `${owner}-${i}`,
       name,
       owner,
-      models: u.models,
+      models: members.reduce((s, m) => s + m.models, 0),
+      // 19: the attached unit's Leadership is taken from the bodyguard unit. Check the datasheets if they differ.
       ld: ld ?? UNKNOWN_LD,
-      datasheetId: sheet?.id,
-      modelWounds: sheet ? expandModels(sheet, u.models).map((m) => m.w) : undefined,
+      datasheetId: first?.sheet?.id,
+      modelWounds: stats.map((s) => s?.w ?? 1),
+      modelCharacter: stats.map((s) => s?.character ?? false),
+      parts: resolved.filter((r) => r.sheet).map((r) => ({ datasheetId: r.sheet!.id, name: r.unit.name, models: r.unit.models })),
     });
   });
   return { units, unknown };
@@ -78,18 +101,23 @@ export function GameSetup() {
   const start = async () => {
     const units: UnitSetup[] = [];
     const unknown: string[] = [];
+    const armyOf: Partial<Record<PlayerId, ArmyList>> = {};
     for (const id of ['p1', 'p2'] as const) {
       const army = armies.find((a) => a.id === armyIds[id]);
       if (!army) continue;
+      armyOf[id] = army;
       const built = unitsFromArmy(army, id, rules);
       units.push(...built.units);
       unknown.push(...built.unknown);
     }
+    const playerSetup = (id: PlayerId): PlayerSetup => ({
+      ...players[id],
+      name: players[id].name.trim() || DEFAULTS[id].name,
+      factionIds: armyOf[id]?.factionIds ?? [],
+      detachmentId: armyOf[id]?.detachmentId,
+    });
     const setup: Setup = {
-      players: {
-        p1: { ...players.p1, name: players.p1.name.trim() || DEFAULTS.p1.name },
-        p2: { ...players.p2, name: players.p2.name.trim() || DEFAULTS.p2.name },
-      },
+      players: { p1: playerSetup('p1'), p2: playerSetup('p2') },
       firstPlayer,
       rounds,
       startingCp,

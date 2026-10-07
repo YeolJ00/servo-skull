@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Datasheet } from './pack.ts';
-import { expandModels } from './unitStats.ts';
+import { expandModels, feelNoPainOf, isDamaged } from './unitStats.ts';
 
 const base: Datasheet = {
   id: '1',
@@ -25,6 +25,7 @@ const base: Datasheet = {
   weapons: [],
   abilities: [],
   leads: [],
+  damagedW: null,
 };
 
 describe('expandModels', () => {
@@ -45,7 +46,22 @@ describe('expandModels', () => {
       models: [{ name: 'Captain', m: '6"', t: '4', sv: '3+', invSv: '4', w: '5', ld: '6+', oc: '1' }],
       composition: [{ description: '1 Captain', min: 1, max: 1 }],
     };
-    expect(expandModels(captain, 1)).toEqual([{ name: 'Captain', w: 5, t: 4, sv: 3, invSv: 4, character: true }]);
+    expect(expandModels(captain, 1)).toEqual([{ name: 'Captain', w: 5, t: 4, sv: 3, invSv: 4, character: true, fnp: null }]);
+  });
+
+  it('reads Feel No Pain from the abilities and the damaged threshold', () => {
+    const tough: Datasheet = {
+      ...base,
+      abilities: [{ name: 'Feel No Pain', description: '', type: 'Core', parameter: '5+' }],
+      damagedW: 4,
+    };
+    expect(feelNoPainOf(tough)).toBe(5);
+    expect(expandModels(tough, 2)[0]?.fnp).toBe(5);
+    expect(feelNoPainOf({ abilities: [{ name: 'Feel No Pain 6+', description: '', type: 'Core', parameter: '' }] })).toBe(6);
+    expect(isDamaged(tough, [4])).toBe(true);
+    expect(isDamaged(tough, [5])).toBe(false);
+    expect(isDamaged(tough, [1, 1])).toBe(false);
+    expect(isDamaged(base, [1])).toBe(false);
   });
 
   it('never returns fewer models than asked', () => {

@@ -11,6 +11,16 @@ export interface PlayerSetup {
   name: string;
   /** CSS color chosen in setup. Always shown next to the player's name. */
   color: string;
+  /** From the chosen army, for stratagem filtering. The engine never reads them. */
+  factionIds?: string[] | undefined;
+  detachmentId?: string | undefined;
+}
+
+/** One datasheet's share of a unit; an attached unit (19) has a bodyguard part and a leader part. */
+export interface UnitPart {
+  datasheetId: string;
+  name: string;
+  models: number;
 }
 
 export interface UnitSetup {
@@ -24,6 +34,10 @@ export interface UnitSetup {
   datasheetId?: string | undefined;
   /** Wounds characteristic per model, in model order. Defaults to 1 each. */
   modelWounds?: number[] | undefined;
+  /** Which models are CHARACTER models, in model order. Defaults to none. */
+  modelCharacter?: boolean[] | undefined;
+  /** Datasheet parts in model order: bodyguard first, then the attached leader (19). */
+  parts?: UnitPart[] | undefined;
 }
 
 export interface GameSetup {
@@ -50,6 +64,9 @@ export interface UnitState {
   /** Remaining wounds per model, index-stable for the whole game. 0 means the model is destroyed. */
   wounds: number[];
   maxWounds: number[];
+  /** CHARACTER models, index-aligned with `wounds`. Casualties by count spare them until last. */
+  character: boolean[];
+  parts: UnitPart[];
   destroyed: boolean;
 
   // Until a test passes (08.03).
@@ -59,6 +76,8 @@ export interface UnitState {
   battleShockTested: boolean;
   selectedToMove: boolean;
   selectedToShoot: boolean;
+  /** How the unit shot this phase; limits which weapons it can fire (10.04 to 10.07). */
+  shootingType: ShootingType | null;
   selectedToFight: boolean;
   declaredCharge: boolean;
   chargeRoll: number | null;
@@ -92,6 +111,7 @@ export interface GameState {
   unitOrder: string[];
   /** Fight phase: whose turn it is to pick the next unit to fight (12.03). */
   fight: { nextPlayer: PlayerId };
+  stratagemsUsed: StratagemUse[];
 }
 
 export type GameEvent =
@@ -113,7 +133,19 @@ export type GameEvent =
   | { t: 'charge/resolve'; unitId: string; targetIds: string[]; success: boolean }
   | { t: 'unit/fight'; unitId: string; fightType: FightType }
   /** The player whose pick it is has no unit able to fight. */
-  | { t: 'fight/pass'; player: PlayerId };
+  | { t: 'fight/pass'; player: PlayerId }
+  /** A stratagem is used (15.01): CP is paid and the use is remembered for the once-per-phase rule. */
+  | { t: 'stratagem/use'; player: PlayerId; stratagemId: string; name: string; cp: number };
+
+export interface StratagemUse {
+  player: PlayerId;
+  stratagemId: string;
+  name: string;
+  cp: number;
+  round: number;
+  /** Slot index of the step it was used in; same phase = same round, same turn, same phase id. */
+  index: number;
+}
 
 /** What the engine keeps from an attack: a summary for the log and the target's wounds after damage. */
 export interface AttackOutcome {
@@ -127,6 +159,8 @@ export interface AttackOutcome {
 
 export type EngineErrorCode =
   | 'badWounds'
+  | 'stratagemUsedThisPhase'
+  | 'badStratagem'
   | 'finished'
   | 'battleShockPending'
   | 'unitsNotMoved'

@@ -3,12 +3,33 @@ import { costFor, type Datasheet } from './pack.ts';
 import { normalizeName, type Rules } from './rules.ts';
 
 export interface ArmyUnit {
+  /** Stable key within the army, so leaders can point at their bodyguard unit. */
+  key: string;
   /** Wahapedia datasheet id. */
   datasheetId: string;
   /** Datasheet name, kept so the unit can be re-resolved after a pack update. */
   name: string;
   models: number;
   wargear?: string[];
+  /** Key of the bodyguard unit this leader is attached to (19.01). */
+  attachedTo?: string;
+}
+
+export function newUnitKey(): string {
+  return `u-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+/** Bodyguard units in the army that this unit's datasheet can lead, excluding ones that already have a leader. */
+export function leadableUnits(army: ArmyList, leader: ArmyUnit, rules: Rules): ArmyUnit[] {
+  const sheet = resolveUnit(leader, rules).sheet;
+  if (!sheet || sheet.leads.length === 0) return [];
+  const leadIds = new Set(sheet.leads);
+  return army.units.filter(
+    (u) =>
+      u.key !== leader.key &&
+      leadIds.has(resolveUnit(u, rules).sheet?.id ?? u.datasheetId) &&
+      !army.units.some((o) => o.key !== leader.key && o.attachedTo === u.key),
+  );
 }
 
 export interface ArmyList {
@@ -119,7 +140,14 @@ export function parseArmyJson(text: string): ArmyList {
     if (typeof u.datasheetId !== 'string' || typeof u.name !== 'string' || typeof u.models !== 'number') {
       throw new ArmyFormatError('shape');
     }
-    return { datasheetId: u.datasheetId, name: u.name, models: u.models, ...(u.wargear ? { wargear: u.wargear } : {}) };
+    return {
+      key: typeof u.key === 'string' ? u.key : newUnitKey(),
+      datasheetId: u.datasheetId,
+      name: u.name,
+      models: u.models,
+      ...(u.wargear ? { wargear: u.wargear } : {}),
+      ...(typeof u.attachedTo === 'string' ? { attachedTo: u.attachedTo } : {}),
+    };
   });
   return {
     schemaVersion: 1,
@@ -151,7 +179,7 @@ export function armyFromPreset(preset: Preset, rules: Rules): { army: ArmyList; 
       missing.push(u.name);
       continue;
     }
-    army.units.push({ datasheetId: sheet.id, name: sheet.name, models: u.models });
+    army.units.push({ key: newUnitKey(), datasheetId: sheet.id, name: sheet.name, models: u.models });
   }
   return { army, missing };
 }

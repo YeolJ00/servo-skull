@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { costFor, parseTarget } from '../pack.ts';
-import { buildPack, parseComposition, parseCosts, type PackFiles } from './buildPack.ts';
+import { buildPack, parseComposition, parseCosts, parseDamagedW, type PackFiles } from './buildPack.ts';
 
 // Small fixtures shaped like the real export (pipe delimited, trailing pipe). Made-up values.
 const files: PackFiles = {
@@ -8,7 +8,7 @@ const files: PackFiles = {
   Factions: '﻿id|name|link|\nORK|Orks|https://w/orks|\nSM|Space Marines|https://w/sm|\nNEC|Necrons|https://w/nec|\n',
   Datasheets:
     '﻿id|name|faction_id|source_id|legend|role|loadout|transport|virtual|is_support|leader_head|leader_footer|damaged_w|damaged_description|link|\n' +
-    '1|Boyz|ORK|s|lore|Battleline|||false|false|||||https://w/boyz|\n' +
+    '1|Boyz|ORK|s|lore|Battleline|||false|false|||1-3||https://w/boyz|\n' +
     '2|Warboss|ORK|s|lore|Infantry Character|||false|false|||||https://w/warboss|\n' +
     '3|Tomb Blades|NEC|s|lore|Mounted|||false|false|||||https://w/tb|\n',
   Datasheets_models:
@@ -79,6 +79,8 @@ describe('buildPack', () => {
     ]);
     expect(pack.datasheets[1]?.leads).toEqual(['1']);
     expect(pack.datasheets[1]?.costs).toEqual([{ models: 1, cost: 65 }]);
+    expect(boyz.damagedW).toBe(3);
+    expect(pack.datasheets[1]?.damagedW).toBeNull();
   });
 
   it('includes faction stratagems and shared core ones, not other factions', () => {
@@ -118,6 +120,12 @@ describe('helpers', () => {
       { models: 5, cost: 80 },
       { models: 10, cost: 150 },
     ]);
+  });
+
+  it('parses damaged thresholds', () => {
+    expect(parseDamagedW('1-5')).toBe(5);
+    expect(parseDamagedW('4')).toBe(4);
+    expect(parseDamagedW('')).toBeNull();
   });
 
   it('parses target values and finds the cost tier for a model count', () => {

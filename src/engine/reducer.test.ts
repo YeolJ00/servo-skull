@@ -206,6 +206,18 @@ describe('Movement phase', () => {
     expect(s.units.b).toMatchObject({ wounds: [0, 0, 0], models: 0, destroyed: true });
   });
 
+  it('casualties by count spare CHARACTER models until last', () => {
+    const setup = makeSetup({
+      units: [{ id: 'a', name: 'Captain + squad', owner: 'p1', models: 3, ld: 6, modelWounds: [1, 1, 5], modelCharacter: [false, false, true] }],
+    });
+    let s = init(setup);
+    expect(s.units.a?.character).toEqual([false, false, true]);
+    s = apply(s, { t: 'unit/models', unitId: 'a', models: 1 });
+    expect(s.units.a?.wounds).toEqual([0, 0, 5]);
+    s = apply(s, { t: 'unit/models', unitId: 'a', models: 0 });
+    expect(s.units.a?.wounds).toEqual([0, 0, 0]);
+  });
+
   it('an attack result applies the target wounds', () => {
     let s = init(makeSetup());
     const result = { weaponName: 'Bolt rifle', attacks: 10, hits: 6, wounds: 3, failedSaves: 2, targetWounds: [1, 1, 1, 1, 1, 1, 1, 1, 0, 0] };
@@ -237,6 +249,7 @@ describe('Shooting and Charge phases', () => {
     expect(code(s, { t: 'unit/shoot', unitId: 'm1', shootingType: 'normal' })).toBe('advancedMustAssault');
     s = apply(s, { t: 'unit/shoot', unitId: 'm1', shootingType: 'assault' });
     expect(s.units.m1?.selectedToShoot).toBe(true);
+    expect(s.units.m1?.shootingType).toBe('assault');
     expect(s.units.m1?.lastRangedAttackTurn).toBe(0);
     expect(code(s, { t: 'unit/shoot', unitId: 'm1', shootingType: 'assault' })).toBe('alreadySelected');
     s = goTo(s, 'charge/charge');
@@ -318,6 +331,34 @@ describe('Fight phase', () => {
     const s = goTo(init(makeSetup()), 'fight/pileIn');
     expect(code(s, { t: 'unit/fight', unitId: 'm1', fightType: 'normal' })).toBe('wrongStep');
     expect(code(s, { t: 'fight/pass', player: 'p1' })).toBe('wrongStep');
+  });
+});
+
+describe('stratagems (15.01)', () => {
+  it('pays CP and refuses the same stratagem twice in one phase, or without enough CP', () => {
+    let s = goTo(init(makeSetup({ startingCp: 2 })), 'shooting/shoot', 'p1');
+    const use: GameEvent = { t: 'stratagem/use', player: 'p1', stratagemId: 'S1', name: 'Overwatch', cp: 1 };
+    s = apply(s, use);
+    expect(s.cp.p1).toBe(2); // 2 starting + 1 gained - 1 spent
+    expect(s.stratagemsUsed).toHaveLength(1);
+    expect(code(s, use)).toBe('stratagemUsedThisPhase');
+    // The other player can use it, and a different stratagem is fine.
+    expect(code(s, { ...use, player: 'p2' })).toBeNull();
+    expect(code(s, { ...use, stratagemId: 'S2' })).toBeNull();
+    expect(code(s, { ...use, stratagemId: 'S3', cp: 5 })).toBe('cpNegative');
+    expect(code(s, { ...use, stratagemId: '', cp: 1 })).toBe('badStratagem');
+    // Next phase: usable again.
+    s = goTo(s, 'charge/charge');
+    expect(code(s, use)).toBeNull();
+    // The same phase in the other player's turn is a different phase.
+    s = goTo(apply(s, use), 'shooting/shoot', 'p2');
+    expect(code(s, use)).toBeNull();
+  });
+
+  it('a 0 CP stratagem still counts for the once-per-phase rule', () => {
+    const s = init(makeSetup());
+    const use: GameEvent = { t: 'stratagem/use', player: 'p1', stratagemId: 'free', name: 'Free', cp: 0 };
+    expect(code(apply(s, use), use)).toBe('stratagemUsedThisPhase');
   });
 });
 

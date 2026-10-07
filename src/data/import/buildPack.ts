@@ -142,6 +142,7 @@ export function buildPack(files: PackFiles, options: BuildOptions): RulesPack {
         };
       }),
       leads: (leaders.get(id) ?? []).map((l) => l.attached_id ?? ''),
+      damagedW: parseDamagedW(r.damaged_w ?? ''),
     };
   });
 
@@ -192,6 +193,13 @@ export function buildPack(files: PackFiles, options: BuildOptions): RulesPack {
     datasheets,
     stratagems,
   };
+}
+
+/** "1-5" (remaining wounds range) → 5. Empty → null. */
+export function parseDamagedW(text: string): number | null {
+  const m = /^\s*(\d+)\s*-\s*(\d+)\s*$/.exec(text) ?? /^\s*(\d+)\s*$/.exec(text);
+  if (!m) return null;
+  return Number(m[2] ?? m[1]);
 }
 
 /** "1-2 Nob models" → min 1, max 2. "1 Intercessor Sergeant" → 1, 1. */

@@ -212,7 +212,7 @@ function ShootPanel({ state, units, enemy, rules, dispatch, onOpenUnit }: { stat
           );
         })}
       </ul>
-      <AttackSheet attacker={attacking} mode="ranged" enemies={enemy} rules={rules} dispatch={dispatch} onClose={() => setAttackingId(null)} />
+      <AttackSheet attacker={attacking} mode="ranged" enemies={enemy} rules={rules} state={state} dispatch={dispatch} onClose={() => setAttackingId(null)} />
       <BottomSheet open={shooting !== null} title={shooting?.name ?? ''} onClose={() => setShooting(null)}>
         {shooting && (
           <div class={styles.sheetBody}>
@@ -431,6 +431,7 @@ function FightPanel({ state, step, rules, dispatch, onOpenUnit }: { state: GameS
         mode="melee"
         enemies={attacking ? enemiesOf(attacking) : []}
         rules={rules}
+        state={state}
         dispatch={dispatch}
         onClose={() => setAttackingId(null)}
       />

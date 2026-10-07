@@ -92,6 +92,18 @@ export interface Datasheet {
   abilities: Ability[];
   /** Datasheet ids this unit can lead (19). */
   leads: string[];
+  /** Damaged threshold (24.39): remaining wounds at or below this give -1 to hit. Null if none. */
+  damagedW: number | null;
+}
+
+/** Value of a named datasheet ability's parameter, e.g. "Feel No Pain" → "5+". */
+export function abilityParameter(sheet: Pick<Datasheet, 'abilities'>, name: string): string | undefined {
+  const n = name.toLowerCase();
+  const hit = sheet.abilities.find((a) => a.name.toLowerCase() === n || a.name.toLowerCase().startsWith(`${n} `));
+  if (!hit) return undefined;
+  if (hit.parameter) return hit.parameter;
+  const m = new RegExp(`^${name}\\s+(\\d\\+?)`, 'i').exec(hit.name);
+  return m?.[1];
 }
 
 export interface Stratagem {

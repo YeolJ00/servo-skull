@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { armyWarnings, resolveUnit, summarizeArmy, unitPoints, type ArmyList, type ArmyWarning } from '../data/army.ts';
+import { armyWarnings, leadableUnits, newUnitKey, resolveUnit, summarizeArmy, unitPoints, type ArmyList, type ArmyWarning } from '../data/army.ts';
 import { getArmy, removeArmy, saveArmy } from '../data/armyStorage.ts';
 import type { Datasheet } from '../data/pack.ts';
 import { detachmentsFor, searchDatasheets } from '../data/rules.ts';
@@ -69,13 +69,33 @@ export function ArmyEditor({ armyId }: { armyId: string }) {
   const warnings = armyWarnings(army, rules);
 
   const addUnit = (sheet: Datasheet) => {
-    update({ units: [...army.units, { datasheetId: sheet.id, name: sheet.name, models: Math.max(1, sheet.minModels) }] });
+    update({ units: [...army.units, { key: newUnitKey(), datasheetId: sheet.id, name: sheet.name, models: Math.max(1, sheet.minModels) }] });
     setAdding(false);
     setQuery('');
   };
   const setModels = (index: number, models: number) =>
     update({ units: army.units.map((u, i) => (i === index ? { ...u, models } : u)) });
-  const removeUnit = (index: number) => update({ units: army.units.filter((_, i) => i !== index) });
+  const removeUnit = (index: number) => {
+    const gone = army.units[index];
+    update({
+      units: army.units
+        .filter((_, i) => i !== index)
+        .map((u) => (gone && u.attachedTo === gone.key ? { ...u, attachedTo: undefined } : u))
+        .map((u) => {
+          const { attachedTo, ...rest } = u;
+          return attachedTo ? { ...rest, attachedTo } : rest;
+        }),
+    });
+  };
+  const setAttached = (index: number, key: string) =>
+    update({
+      units: army.units.map((u, i) => {
+        if (i !== index) return u;
+        const { attachedTo, ...rest } = u;
+        void attachedTo;
+        return key ? { ...rest, attachedTo: key } : rest;
+      }),
+    });
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(army, null, 2)], { type: 'application/json' });
@@ -224,6 +244,22 @@ export function ArmyEditor({ armyId }: { armyId: string }) {
                   max={sheet && sheet.maxModels > 0 ? sheet.maxModels : 30}
                   onChange={(v) => setModels(i, v)}
                 />
+                {sheet && sheet.leads.length > 0 && (
+                  <label class={styles.field}>
+                    <span>{t.editor.leads}</span>
+                    <select class={styles.input} value={u.attachedTo ?? ''} onChange={(e) => setAttached(i, (e.currentTarget as HTMLSelectElement).value)}>
+                      <option value="">{t.editor.leadsNone}</option>
+                      {leadableUnits(army, u, rules).map((b) => (
+                        <option value={b.key} key={b.key}>
+                          {b.name} ({b.models})
+                        </option>
+                      ))}
+                      {u.attachedTo && !leadableUnits(army, u, rules).some((b) => b.key === u.attachedTo) && (
+                        <option value={u.attachedTo}>{army.units.find((b) => b.key === u.attachedTo)?.name ?? '?'}</option>
+                      )}
+                    </select>
+                  </label>
+                )}
                 <div class={styles.unitActions}>
                   {sheet && (
                     <a href={sheet.link} target="_blank" rel="noopener">
