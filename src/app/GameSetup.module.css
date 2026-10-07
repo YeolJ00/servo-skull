@@ -1,7 +1,18 @@
 .form {
   display: grid;
-  gap: var(--space-5);
-  max-width: 520px;
+  gap: var(--space-4);
+  max-width: 900px;
+}
+
+/* Wider screens: the two players side by side, then the game settings in a row. */
+@media (min-width: 640px) {
+  .form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .form > .warning {
+    grid-column: 1 / -1;
+  }
 }
 
 .warning {

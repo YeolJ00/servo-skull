@@ -4,6 +4,14 @@
   min-height: 100dvh;
 }
 
+/* The page never scrolls; the main area's children scroll inside themselves. */
+.shellFixed {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100dvh;
+  overflow: hidden;
+}
+
 .topPad {
   height: var(--safe-top);
 }
@@ -30,10 +38,18 @@
   background: var(--tint);
 }
 
-.main,
-.mainPanes {
+.main {
   padding: var(--space-4) calc(var(--space-4) + var(--safe-right)) var(--space-6)
     calc(var(--space-4) + var(--safe-left));
+}
+
+.mainFixed {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--space-3) calc(var(--space-3) + var(--safe-right)) var(--space-2)
+    calc(var(--space-3) + var(--safe-left));
+  overflow: hidden;
 }
 
 .footer {
@@ -41,21 +57,34 @@
   bottom: 0;
   z-index: 2;
   display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) calc(var(--space-4) + var(--safe-right)) calc(var(--space-3) + var(--safe-bottom))
-    calc(var(--space-4) + var(--safe-left));
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) calc(var(--space-3) + var(--safe-right)) calc(var(--space-2) + var(--safe-bottom))
+    calc(var(--space-3) + var(--safe-left));
   background: var(--surface);
   border-top: 1px solid var(--line-strong);
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
 }
 
-/* Tablet landscape: two panes. The tracker sits left; details and dice right. Opt-in per screen. */
+/* Short screens: slimmer header and footer so the main area keeps its height. */
+@media (max-height: 520px) {
+  .header {
+    padding-top: calc(var(--space-2) + var(--safe-top));
+    padding-bottom: var(--space-2);
+  }
+
+  .footer {
+    padding-top: var(--space-1);
+    padding-bottom: calc(var(--space-1) + var(--safe-bottom));
+  }
+}
+
+/* Tablet landscape: two panes. The tracker sits left; details right. Opt-in per screen. */
 @media (min-width: 900px) and (orientation: landscape) {
   .mainPanes {
     display: grid;
-    grid-template-columns: minmax(320px, 1fr) 1.2fr;
-    gap: var(--space-5);
-    align-items: start;
+    grid-template-columns: minmax(360px, 1fr) 1.1fr;
+    gap: var(--space-3);
+    align-items: stretch;
   }
 }

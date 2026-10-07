@@ -13,13 +13,19 @@ interface Props {
    * Only the Game screen uses this; other screens stay single-column.
    */
   panes?: boolean;
+  /**
+   * The main area fills the screen and never scrolls the page; children scroll inside themselves.
+   * Used by the Game screen so the current step and its checklist always stay in view.
+   */
+  fixed?: boolean;
   children: ComponentChildren;
 }
 
 // App shell: header, scrolling main area, bottom bar. Safe-area padded.
-export function Shell({ header, tint, footer, panes, children }: Props) {
+export function Shell({ header, tint, footer, panes, fixed, children }: Props) {
+  const mainClass = [fixed ? styles.mainFixed : styles.main, panes ? styles.mainPanes : ''].join(' ');
   return (
-    <div class={styles.shell}>
+    <div class={fixed ? styles.shellFixed : styles.shell}>
       {header ? (
         <header class={styles.header} style={tint ? { '--tint': tint } : undefined}>
           {header}
@@ -27,7 +33,7 @@ export function Shell({ header, tint, footer, panes, children }: Props) {
       ) : (
         <div class={styles.topPad} />
       )}
-      <main class={panes ? styles.mainPanes : styles.main}>{children}</main>
+      <main class={mainClass}>{children}</main>
       {footer && <footer class={styles.footer}>{footer}</footer>}
     </div>
   );

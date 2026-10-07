@@ -253,15 +253,20 @@ Design direction: a field dataslate, not a website. Immersive and dark: void-bla
 
 **Phone layout**
 
+The Game screen never scrolls the page (`Shell fixed`): the step card is compact and the checklist fills the rest and scrolls inside itself. Everything secondary opens as a pop-up from a small icon toolbar: Score (CP/VP counters, leave, end), Units (roster), Stratagems, Log. The full step help and the rule link open from the "?" on the step card. On a landscape tablet the same four panels are tabs in the right pane. On short screens (phone landscape, ≤ 520px high) the toolbar icons join the Undo/Next row without labels.
+
 ```
 +------------------------------+
 | Round 2           Orks' turn |  tinted with the active player's color
-| Shooting: select a unit      |
-| CP  Marines 2   Orks 3       |
+| Shooting phase    [CP ●2 ●3] |  CP chip opens Score
 +------------------------------+
-| What to do now (step card)   |
-| Units / checklist            |
+| WHAT TO DO NOW            ? |  compact step card, 2 lines of help
+| Shoot                        |
 +------------------------------+
+| 3 units can still shoot      |  checklist, scrolls inside
+| ...                          |
++------------------------------+
+| Score  Units  Strats  Log    |  icon toolbar → pop-ups
 | Undo               Next step |  thumb zone, safe-area padded
 +------------------------------+
 ```

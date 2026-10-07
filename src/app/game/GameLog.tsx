@@ -94,10 +94,10 @@ export function logEntries(setup: GameSetup, events: GameEvent[]): LogEntry[] {
   return out.reverse();
 }
 
-export function GameLog({ open, setup, events, onClose }: Props) {
-  const entries = open ? logEntries(setup, events) : [];
+function LogBody({ setup, events }: { setup: GameSetup; events: GameEvent[] }) {
+  const entries = logEntries(setup, events);
   return (
-    <BottomSheet open={open} title={t.log.title} onClose={onClose}>
+    <>
       {entries.length === 0 && <p class={styles.muted}>{t.log.empty}</p>}
       <ul class={styles.logList}>
         {entries.map((e, i) => (
@@ -109,6 +109,16 @@ export function GameLog({ open, setup, events, onClose }: Props) {
           </li>
         ))}
       </ul>
+    </>
+  );
+}
+
+export function GameLog({ open, setup, events, onClose }: Props) {
+  return (
+    <BottomSheet open={open} title={t.log.title} onClose={onClose}>
+      {open && <LogBody setup={setup} events={events} />}
     </BottomSheet>
   );
 }
+
+GameLog.Body = LogBody;
