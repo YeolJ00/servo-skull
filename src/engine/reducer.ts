@@ -21,6 +21,7 @@ function fail(code: EngineErrorCode): never {
 }
 
 function newUnit(u: UnitSetup): UnitState {
+  const maxWounds = Array.from({ length: u.models }, (_, i) => Math.max(1, u.modelWounds?.[i] ?? 1));
   return {
     id: u.id,
     name: u.name,
@@ -29,6 +30,8 @@ function newUnit(u: UnitSetup): UnitState {
     startingStrength: u.models,
     ld: u.ld,
     datasheetId: u.datasheetId ?? null,
+    wounds: [...maxWounds],
+    maxWounds,
     destroyed: u.models <= 0,
     battleShocked: false,
     battleShockTested: false,
@@ -137,7 +140,21 @@ export function apply(state: GameState, event: GameEvent): GameState {
     case 'unit/models': {
       const u = getUnit(state, event.unitId);
       if (!Number.isInteger(event.models) || event.models < 0 || event.models > u.startingStrength) fail('badModels');
-      return withUnit(state, { ...u, models: event.models, destroyed: event.models === 0 });
+      return withUnit(state, withWounds(u, setModelCount(u, event.models)));
+    }
+    case 'unit/wounds': {
+      const u = getUnit(state, event.unitId);
+      if (event.wounds.length !== u.maxWounds.length) fail('badWounds');
+      if (event.wounds.some((w, i) => !Number.isInteger(w) || w < 0 || w > (u.maxWounds[i] ?? 0))) fail('badWounds');
+      return withUnit(state, withWounds(u, event.wounds));
+    }
+    case 'attack/resolved': {
+      getUnit(state, event.attackerId);
+      const target = getUnit(state, event.targetId);
+      const w = event.result.targetWounds;
+      if (w.length !== target.maxWounds.length) fail('badWounds');
+      if (w.some((x, i) => !Number.isInteger(x) || x < 0 || x > (target.maxWounds[i] ?? 0))) fail('badWounds');
+      return withUnit(state, withWounds(target, w));
     }
     case 'unit/battleShock':
       return battleShock(state, event.unitId, event.roll);
@@ -168,6 +185,31 @@ function getUnit(state: GameState, id: string): UnitState {
 
 function withUnit(state: GameState, u: UnitState): GameState {
   return { ...state, units: { ...state.units, [u.id]: u } };
+}
+
+/** A unit with a new wounds array; the model count and destroyed flag follow from it. */
+function withWounds(u: UnitState, wounds: number[]): UnitState {
+  const models = wounds.filter((w) => w > 0).length;
+  return { ...u, wounds, models, destroyed: models === 0 };
+}
+
+/** Wounds array for a target model count: casualties are removed from the end, revivals restore from the end. */
+function setModelCount(u: UnitState, models: number): number[] {
+  const wounds = [...u.wounds];
+  let alive = wounds.filter((w) => w > 0).length;
+  for (let i = wounds.length - 1; i >= 0 && alive > models; i--) {
+    if ((wounds[i] ?? 0) > 0) {
+      wounds[i] = 0;
+      alive--;
+    }
+  }
+  for (let i = wounds.length - 1; i >= 0 && alive < models; i--) {
+    if (wounds[i] === 0) {
+      wounds[i] = u.maxWounds[i] ?? 1;
+      alive++;
+    }
+  }
+  return wounds;
 }
 
 function mapUnits(state: GameState, f: (u: UnitState) => UnitState): GameState {

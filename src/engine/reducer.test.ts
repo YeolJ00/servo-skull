@@ -187,6 +187,34 @@ describe('Movement phase', () => {
     expect(code(moved, { t: 'unit/move', unitId: 'm1', moveType: 'normal' })).toBe('alreadySelected');
   });
 
+  it('tracks wounds per model; the model count follows the wounds array', () => {
+    const setup = makeSetup({
+      units: [{ id: 'b', name: 'Boyz', owner: 'p1', models: 3, ld: 7, modelWounds: [3, 1, 1] }],
+    });
+    let s = init(setup);
+    expect(s.units.b).toMatchObject({ wounds: [3, 1, 1], maxWounds: [3, 1, 1], models: 3 });
+    s = apply(s, { t: 'unit/wounds', unitId: 'b', wounds: [1, 0, 1] });
+    expect(s.units.b).toMatchObject({ wounds: [1, 0, 1], models: 2, destroyed: false });
+    expect(code(s, { t: 'unit/wounds', unitId: 'b', wounds: [4, 0, 1] })).toBe('badWounds');
+    expect(code(s, { t: 'unit/wounds', unitId: 'b', wounds: [1, 0] })).toBe('badWounds');
+    // Casualties by count remove models from the end; revivals restore from the end.
+    s = apply(s, { t: 'unit/models', unitId: 'b', models: 1 });
+    expect(s.units.b?.wounds).toEqual([1, 0, 0]);
+    s = apply(s, { t: 'unit/models', unitId: 'b', models: 3 });
+    expect(s.units.b?.wounds).toEqual([1, 1, 1]);
+    s = apply(s, { t: 'unit/models', unitId: 'b', models: 0 });
+    expect(s.units.b).toMatchObject({ wounds: [0, 0, 0], models: 0, destroyed: true });
+  });
+
+  it('an attack result applies the target wounds', () => {
+    let s = init(makeSetup());
+    const result = { weaponName: 'Bolt rifle', attacks: 10, hits: 6, wounds: 3, failedSaves: 2, targetWounds: [1, 1, 1, 1, 1, 1, 1, 1, 0, 0] };
+    s = apply(s, { t: 'attack/resolved', attackerId: 'm1', targetId: 'o1', result });
+    expect(s.units.o1?.models).toBe(8);
+    expect(code(s, { t: 'attack/resolved', attackerId: 'm1', targetId: 'o1', result: { ...result, targetWounds: [1] } })).toBe('badWounds');
+    expect(code(s, { t: 'attack/resolved', attackerId: 'zz', targetId: 'o1', result })).toBe('unknownUnit');
+  });
+
   it('models cannot exceed starting strength', () => {
     const s = init(makeSetup());
     expect(code(s, { t: 'unit/models', unitId: 'm1', models: 6 })).toBe('badModels');

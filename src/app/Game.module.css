@@ -188,7 +188,7 @@
   pointer-events: none;
 }
 
+/* Positioned so it paints above the fixed watermark; no z-index, so sheets inside it can rise above the footer. */
 .content {
   position: relative;
-  z-index: 1;
 }

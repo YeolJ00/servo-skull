@@ -1,4 +1,5 @@
 import type { ComponentChildren } from 'preact';
+import { createPortal } from 'preact/compat';
 import { useEffect } from 'preact/hooks';
 import { t } from '../i18n/index.ts';
 import styles from './BottomSheet.module.css';
@@ -27,7 +28,9 @@ export function BottomSheet({ open, title, onClose, children }: Props) {
   }, [open, onClose]);
 
   if (!open) return null;
-  return (
+  // Portalled to the body: plates use `isolation: isolate`, which would otherwise trap the
+  // sheet in a stacking context below the sticky footer.
+  return createPortal(
     <div class={styles.backdrop} onClick={onClose}>
       <section
         class={`plate ${styles.sheet}`}
@@ -44,6 +47,7 @@ export function BottomSheet({ open, title, onClose, children }: Props) {
         </header>
         <div class={styles.body}>{children}</div>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }

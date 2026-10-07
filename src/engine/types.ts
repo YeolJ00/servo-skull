@@ -22,6 +22,8 @@ export interface UnitSetup {
   ld: number;
   /** Wahapedia datasheet id, so the UI can show stats and weapons. The engine never reads it. */
   datasheetId?: string | undefined;
+  /** Wounds characteristic per model, in model order. Defaults to 1 each. */
+  modelWounds?: number[] | undefined;
 }
 
 export interface GameSetup {
@@ -45,6 +47,9 @@ export interface UnitState {
   startingStrength: number;
   ld: number;
   datasheetId: string | null;
+  /** Remaining wounds per model, index-stable for the whole game. 0 means the model is destroyed. */
+  wounds: number[];
+  maxWounds: number[];
   destroyed: boolean;
 
   // Until a test passes (08.03).
@@ -93,8 +98,12 @@ export type GameEvent =
   | { t: 'step/next' }
   | { t: 'cp/adjust'; player: PlayerId; delta: number; reason: string }
   | { t: 'vp/adjust'; player: PlayerId; delta: number; reason: string }
-  /** Record casualties. 0 models destroys the unit. */
+  /** Record casualties by count. 0 models destroys the unit. */
   | { t: 'unit/models'; unitId: string; models: number }
+  /** Set remaining wounds per model (same length as the unit's model list). */
+  | { t: 'unit/wounds'; unitId: string; wounds: number[] }
+  /** An attack sequence resolved by the dice module; applies the target's new wounds. */
+  | { t: 'attack/resolved'; attackerId: string; targetId: string; result: AttackOutcome }
   /** Battle-shock test result: the 2D6 total (08.03). */
   | { t: 'unit/battleShock'; unitId: string; roll: number }
   | { t: 'unit/move'; unitId: string; moveType: MoveType; advanceRoll?: number }
@@ -106,7 +115,18 @@ export type GameEvent =
   /** The player whose pick it is has no unit able to fight. */
   | { t: 'fight/pass'; player: PlayerId };
 
+/** What the engine keeps from an attack: a summary for the log and the target's wounds after damage. */
+export interface AttackOutcome {
+  weaponName: string;
+  attacks: number;
+  hits: number;
+  wounds: number;
+  failedSaves: number;
+  targetWounds: number[];
+}
+
 export type EngineErrorCode =
+  | 'badWounds'
   | 'finished'
   | 'battleShockPending'
   | 'unitsNotMoved'

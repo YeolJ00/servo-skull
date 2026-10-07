@@ -244,3 +244,55 @@
   display: grid;
   gap: var(--space-3);
 }
+
+.inlineField {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--touch);
+}
+
+.numInput {
+  width: 5rem;
+  min-height: var(--touch);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  text-align: center;
+}
+
+.summary {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--text-lg);
+}
+
+.woundRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.woundPips {
+  display: flex;
+  gap: 4px;
+}
+
+.pipOn,
+.pipOff {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--primary);
+}
+
+.pipOn {
+  background: var(--primary-bright);
+}

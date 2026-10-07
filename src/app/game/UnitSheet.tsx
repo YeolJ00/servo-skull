@@ -1,4 +1,5 @@
 import { parseTarget, type Datasheet } from '../../data/pack.ts';
+import { expandModels } from '../../data/unitStats.ts';
 import type { GameEvent, UnitState } from '../../engine/types.ts';
 import { t } from '../../i18n/index.ts';
 import { BottomSheet } from '../../ui/BottomSheet.tsx';
@@ -32,6 +33,41 @@ export function UnitSheet({ unit, sheet, dispatch, onClose }: Props) {
             />
             <p class={styles.muted}>{t.play.casualtiesHelp(parseTarget(sheet?.models[0]?.ld ?? '') ?? unit.ld)}</p>
           </section>
+
+          {unit.maxWounds.some((w) => w > 1) && (
+            <section class={styles.block}>
+              <p class="kicker">{t.play.woundsTitle}</p>
+              <p class={styles.muted}>{t.play.woundsHelp}</p>
+              <ul class={styles.options}>
+                {unit.maxWounds.map((max, i) => {
+                  const w = unit.wounds[i] ?? 0;
+                  const name = sheet ? (expandModels(sheet, unit.maxWounds.length)[i]?.name ?? '') : '';
+                  return (
+                    <li class={styles.woundRow} key={i}>
+                      <button
+                        type="button"
+                        class={styles.option}
+                        onClick={() => {
+                          const next = [...unit.wounds];
+                          next[i] = w === 0 ? max : w - 1;
+                          dispatch({ t: 'unit/wounds', unitId: unit.id, wounds: next });
+                        }}
+                      >
+                        <span class={styles.optionTitle}>
+                          {name || `${i + 1}`} <span class={`${styles.muted} num`}>{w}/{max}</span>
+                        </span>
+                        <span class={styles.woundPips} aria-hidden="true">
+                          {Array.from({ length: max }, (_, p) => (
+                            <span key={p} class={p < w ? styles.pipOn : styles.pipOff} />
+                          ))}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
 
           {sheet && sheet.models.length > 0 && (
             <section class={styles.block}>

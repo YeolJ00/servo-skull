@@ -7,6 +7,7 @@ import { t } from '../../i18n/index.ts';
 import { BottomSheet } from '../../ui/BottomSheet.tsx';
 import { Button } from '../../ui/Button.tsx';
 import { DiceRoll } from '../../ui/DiceRoll.tsx';
+import { AttackSheet } from './AttackSheet.tsx';
 import styles from './game.module.css';
 import { UnitChips } from './UnitChips.tsx';
 
@@ -32,12 +33,12 @@ export function PhasePanel({ state, step, rules, dispatch, onOpenUnit }: Props) 
     case 'movement/move':
       return <MovePanel state={state} units={mine} dispatch={dispatch} onOpenUnit={onOpenUnit} />;
     case 'shooting/shoot':
-      return <ShootPanel state={state} units={mine} rules={rules} dispatch={dispatch} onOpenUnit={onOpenUnit} />;
+      return <ShootPanel state={state} units={mine} enemy={enemy} rules={rules} dispatch={dispatch} onOpenUnit={onOpenUnit} />;
     case 'charge/charge':
       return <ChargePanel state={state} units={mine} enemy={enemy} dispatch={dispatch} onOpenUnit={onOpenUnit} />;
     case 'fight/fightsFirst':
     case 'fight/remaining':
-      return <FightPanel state={state} step={step} dispatch={dispatch} onOpenUnit={onOpenUnit} />;
+      return <FightPanel state={state} step={step} rules={rules} dispatch={dispatch} onOpenUnit={onOpenUnit} />;
     default:
       return null;
   }
@@ -180,8 +181,10 @@ function MovePanel({ state, units, dispatch, onOpenUnit }: { state: GameState; u
 
 const SHOOT_TYPES: ShootingType[] = ['normal', 'assault', 'closeQuarters', 'indirect'];
 
-function ShootPanel({ state, units, rules, dispatch, onOpenUnit }: { state: GameState; units: UnitState[]; rules: Rules; dispatch: (e: GameEvent) => void; onOpenUnit: (u: UnitState) => void }) {
+function ShootPanel({ state, units, enemy, rules, dispatch, onOpenUnit }: { state: GameState; units: UnitState[]; enemy: UnitState[]; rules: Rules; dispatch: (e: GameEvent) => void; onOpenUnit: (u: UnitState) => void }) {
   const [shooting, setShooting] = useState<UnitState | null>(null);
+  const [attackingId, setAttackingId] = useState<string | null>(null);
+  const attacking = attackingId ? (state.units[attackingId] ?? null) : null;
   const eligible = units.filter((u) => check(state, { t: 'unit/shoot', unitId: u.id, shootingType: u.advanced ? 'assault' : 'normal' }) === null);
   const sheet = shooting?.datasheetId ? rules.sheetById.get(shooting.datasheetId) : undefined;
   const ranged = sheet?.weapons.filter((w) => w.type === 'Ranged') ?? [];
@@ -191,12 +194,16 @@ function ShootPanel({ state, units, rules, dispatch, onOpenUnit }: { state: Game
       <ul class={styles.list}>
         {units.map((u) => {
           const can = eligible.includes(u);
-          const why = u.selectedToShoot ? t.play.shoot.done : u.fellBack ? t.play.chips.fellBack : null;
+          const why = u.fellBack ? t.play.chips.fellBack : null;
           return (
             <Row unit={u} onOpen={onOpenUnit} key={u.id}>
               {can ? (
                 <Button variant="secondary" onClick={() => setShooting(u)}>
                   {t.play.shoot.shoot}
+                </Button>
+              ) : u.selectedToShoot ? (
+                <Button variant="ghost" onClick={() => setAttackingId(u.id)}>
+                  {t.play.attack.open}
                 </Button>
               ) : (
                 why && <span class={styles.muted}>{why}</span>
@@ -205,6 +212,7 @@ function ShootPanel({ state, units, rules, dispatch, onOpenUnit }: { state: Game
           );
         })}
       </ul>
+      <AttackSheet attacker={attacking} mode="ranged" enemies={enemy} rules={rules} dispatch={dispatch} onClose={() => setAttackingId(null)} />
       <BottomSheet open={shooting !== null} title={shooting?.name ?? ''} onClose={() => setShooting(null)}>
         {shooting && (
           <div class={styles.sheetBody}>
@@ -221,6 +229,7 @@ function ShootPanel({ state, units, rules, dispatch, onOpenUnit }: { state: Game
                       onClick={() => {
                         dispatch({ t: 'unit/shoot', unitId: shooting.id, shootingType: st });
                         setShooting(null);
+                        setAttackingId(shooting.id);
                       }}
                     >
                       <span class={styles.optionTitle}>{t.play.shoot.types[st].title}</span>
@@ -262,7 +271,7 @@ function ShootPanel({ state, units, rules, dispatch, onOpenUnit }: { state: Game
                     ))}
                   </tbody>
                 </table>
-                <p class={styles.muted}>{t.play.shoot.byHand}</p>
+                <p class={styles.muted}>{t.play.shoot.helperNext}</p>
               </section>
             )}
           </div>
@@ -372,8 +381,11 @@ function ChargePanel({ state, units, enemy, dispatch, onOpenUnit }: { state: Gam
 
 const FIGHT_TYPES: FightType[] = ['normal', 'overrun'];
 
-function FightPanel({ state, step, dispatch, onOpenUnit }: { state: GameState; step: StepId; dispatch: (e: GameEvent) => void; onOpenUnit: (u: UnitState) => void }) {
+function FightPanel({ state, step, rules, dispatch, onOpenUnit }: { state: GameState; step: StepId; rules: Rules; dispatch: (e: GameEvent) => void; onOpenUnit: (u: UnitState) => void }) {
   const [fighting, setFighting] = useState<UnitState | null>(null);
+  const [attackingId, setAttackingId] = useState<string | null>(null);
+  const attacking = attackingId ? (state.units[attackingId] ?? null) : null;
+  const enemiesOf = (u: UnitState) => unitsOf(state, otherPlayer(u.owner)).filter((e) => !e.destroyed);
   const picker: PlayerId = state.fight.nextPlayer;
   const pickerName = state.setup.players[picker].name;
   const canFight = (u: UnitState) => check(state, { t: 'unit/fight', unitId: u.id, fightType: 'normal' }) === null;
@@ -398,7 +410,9 @@ function FightPanel({ state, step, dispatch, onOpenUnit }: { state: GameState; s
             {g.units.map((u) => (
               <Row unit={u} onOpen={onOpenUnit} key={u.id}>
                 {u.selectedToFight ? (
-                  <span class={styles.good}>{t.play.fight.done}</span>
+                  <Button variant="ghost" onClick={() => setAttackingId(u.id)}>
+                    {t.play.attack.open}
+                  </Button>
                 ) : (
                   <Button variant="secondary" disabled={!canFight(u)} onClick={() => setFighting(u)}>
                     {t.play.fight.fight}
@@ -412,6 +426,14 @@ function FightPanel({ state, step, dispatch, onOpenUnit }: { state: GameState; s
       <Button variant="ghost" onClick={() => dispatch({ t: 'fight/pass', player: picker })}>
         {t.play.fight.pass(pickerName)}
       </Button>
+      <AttackSheet
+        attacker={attacking}
+        mode="melee"
+        enemies={attacking ? enemiesOf(attacking) : []}
+        rules={rules}
+        dispatch={dispatch}
+        onClose={() => setAttackingId(null)}
+      />
       <BottomSheet open={fighting !== null} title={fighting?.name ?? ''} onClose={() => setFighting(null)}>
         {fighting && (
           <div class={styles.sheetBody}>
@@ -425,6 +447,7 @@ function FightPanel({ state, step, dispatch, onOpenUnit }: { state: GameState; s
                     onClick={() => {
                       dispatch({ t: 'unit/fight', unitId: fighting.id, fightType: ft });
                       setFighting(null);
+                      setAttackingId(fighting.id);
                     }}
                   >
                     <span class={styles.optionTitle}>{t.play.fight.types[ft].title}</span>

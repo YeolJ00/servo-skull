@@ -85,6 +85,10 @@ export async function withPage(fn, { chrome } = {}) {
     ws.close();
     proc.kill();
     await sleep(300);
-    rmSync(profile, { recursive: true, force: true });
+    try {
+      rmSync(profile, { recursive: true, force: true });
+    } catch {
+      // Chrome may still hold the profile for a moment on Windows; a leftover temp dir is harmless.
+    }
   }
 }

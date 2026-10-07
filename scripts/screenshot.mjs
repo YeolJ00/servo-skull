@@ -57,6 +57,24 @@ await withPage(
     await send('Page.navigate', { url: args.url });
     await loaded;
     await sleep(wait);
+
+    // --clicks "Shoot|Normal shooting|Boyz": click buttons by their visible text, in order.
+    for (const text of (args.clicks ?? '').split('|').map((s) => s.trim()).filter(Boolean)) {
+      const expr = `(() => {
+        const wanted = ${JSON.stringify(text)}.toLowerCase();
+        // Prefer controls inside an open dialog (bottom sheet) over the page behind it.
+        const scope = document.querySelector('[role="dialog"]') ?? document;
+        const els = [...scope.querySelectorAll('button, a, label')];
+        const el = els.find((e) => (e.textContent || '').trim().toLowerCase().startsWith(wanted));
+        if (!el) return 'missing: ' + wanted;
+        el.click();
+        return 'ok';
+      })()`;
+      const r = await send('Runtime.evaluate', { expression: expr, returnByValue: true });
+      if (r.result?.value !== 'ok') throw new Error(`click failed: ${r.result?.value}`);
+      await sleep(400);
+    }
+
     const shot = await send('Page.captureScreenshot', { format: 'png' });
     writeFileSync(args.out, Buffer.from(shot.data, 'base64'));
     console.log(`wrote ${args.out} (${width}x${height}, ${scheme})`);

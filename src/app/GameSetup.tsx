@@ -4,6 +4,7 @@ import { listArmies } from '../data/armyStorage.ts';
 import { loadGame, saveGame } from '../data/gameStorage.ts';
 import { parseTarget } from '../data/pack.ts';
 import type { Rules } from '../data/rules.ts';
+import { expandModels } from '../data/unitStats.ts';
 import type { GameSetup as Setup, PlayerId, PlayerSetup, UnitSetup } from '../engine/types.ts';
 import { t } from '../i18n/index.ts';
 import { Button } from '../ui/Button.tsx';
@@ -43,6 +44,7 @@ export function unitsFromArmy(army: ArmyList, owner: PlayerId, rules: Rules): { 
       models: u.models,
       ld: ld ?? UNKNOWN_LD,
       datasheetId: sheet?.id,
+      modelWounds: sheet ? expandModels(sheet, u.models).map((m) => m.w) : undefined,
     });
   });
   return { units, unknown };
