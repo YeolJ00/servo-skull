@@ -3,6 +3,9 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  schedule:
+    # Weekly rebuild so the published rules packs follow Wahapedia's updates.
+    - cron: '17 4 * * 1'
   workflow_dispatch:
 
 permissions:
@@ -26,6 +29,16 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm test
+      - name: Week stamp for the export cache
+        id: week
+        run: echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+      - name: Cache the Wahapedia export for a week
+        uses: actions/cache@v4
+        with:
+          path: .cache/wahapedia
+          key: wahapedia-export-${{ steps.week.outputs.week }}
+      - name: Build rules packs
+        run: npm run packs
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

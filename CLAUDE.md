@@ -85,9 +85,9 @@ How it flows:
 - `scripts/build-pack.ts` downloads the spec and CSVs into `.cache/wahapedia/` (gitignored), filters by faction, and writes `packs/<name>.pack.json`.
   - The pack includes `schemaVersion`, the source, and Wahapedia's last-update stamp.
   - Cache downloads and never re-download in a loop. Wahapedia does not run an API.
-- `packs/` and `.cache/` are gitignored. Datasheets, stratagems, and rules text are Games Workshop IP, and a GitHub Pages site is public.
-  - The app has an Import screen: pick a `.pack.json` on the device, and it is stored in IndexedDB and works offline from then on.
-  - The loader also accepts a same-origin URL. To publish packs later, un-ignore `packs/` and copy them to `public/`.
+- `packs/`, `public/packs/`, and `.cache/` are gitignored. Datasheets, stratagems, and rules text are Games Workshop IP; nothing of it is committed.
+  - Packs are published with the site instead (decided 2026-10-07, see Decisions). `packs.config.json` lists the packs; `scripts/publish-packs.ts` (`npm run packs`) builds them into `public/packs/` with an `index.json`, and the deploy workflow runs it before `vite build`, weekly on a schedule and on every push. The export is cached in CI for a week.
+  - The Import screen reads the same-origin `packs/index.json`, installs or updates a pack into IndexedDB with one tap, and shows what is on the device. A `.pack.json` file import remains as a fallback. Wahapedia's CSVs send no CORS headers, so the browser can never fetch them directly; the build step is the only place that talks to Wahapedia.
 - Wahapedia asks for credit. Show "Powered by Wahapedia" with a link on the Home and Import screens.
 - The importer is a pure module (`src/data/import/`) so it can later also run in the browser on raw CSVs.
 - An army can include units from more than one faction (allies, e.g. Imperial Agents). Never assume one faction per army.
@@ -294,9 +294,11 @@ Design direction: a field dataslate, not a website. Immersive and dark: void-bla
   1. `npm ci`
   2. `npm run check`
   3. `npm test`
-  4. `npm run build`
-  5. `actions/upload-pages-artifact` (dist)
-  6. `actions/deploy-pages`
+  4. `npm run packs` (Wahapedia export cached per ISO week with `actions/cache`)
+  5. `npm run build`
+  6. `actions/upload-pages-artifact` (dist)
+  7. `actions/deploy-pages`
+- The workflow also runs weekly (Monday 04:17 UTC) so published packs follow Wahapedia's updates.
 - In the repo settings, set Pages → Source to "GitHub Actions".
 
 ## Testing
@@ -355,6 +357,6 @@ Status as of 2026-10-07:
 ## Decisions
 
 - 2026-10: 11th edition core rules. The Wahapedia data export is the data source.
-- 2026-10: Rules packs are not committed or deployed; each device imports them. The owner may switch to publishing them.
+- 2026-10: Rules packs are never committed. Until 2026-10-07 each device imported a file; since then the deploy workflow builds the packs from Wahapedia and publishes them with the site, and devices install them with one tap. The owner accepted that this puts rules text on the public site.
 - 2026-10: The engine is event-sourced. Physical and digital dice are both first-class.
 - 2026-10-07: The app is its own repo and Pages site, not a folder of the personal site. It was briefly a subfolder with committed build output; that was reverted so no build output is ever committed.

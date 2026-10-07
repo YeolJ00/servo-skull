@@ -9,3 +9,6 @@ packs/
 
 .DS_Store
 *.log
+
+# Published packs are built at deploy time by scripts/publish-packs.ts.
+public/packs/

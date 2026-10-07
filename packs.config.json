@@ -1,0 +1,6 @@
+[
+  { "factions": ["SM", "ORK"], "name": "Space Marines + Orks" },
+  { "factions": ["SM"], "name": "Space Marines" },
+  { "factions": ["ORK"], "name": "Orks" },
+  { "factions": ["AoI"], "name": "Imperial Agents" }
+]
