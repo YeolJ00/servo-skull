@@ -4,15 +4,30 @@
   min-height: 100dvh;
 }
 
+.topPad {
+  height: var(--safe-top);
+}
+
 .header {
-  --tint: var(--surface);
+  --tint: var(--primary);
   position: sticky;
   top: 0;
   z-index: 2;
   padding: calc(var(--space-3) + var(--safe-top)) calc(var(--space-4) + var(--safe-right)) var(--space-3)
     calc(var(--space-4) + var(--safe-left));
-  background: color-mix(in srgb, var(--tint) 45%, var(--surface));
-  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--tint) 28%, var(--surface)) 0%, var(--surface) 100%);
+  border-bottom: 1px solid var(--line-strong);
+  box-shadow: var(--shadow);
+}
+
+/* A thin bar in the active player's color along the top edge. */
+.header::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: calc(4px + var(--safe-top));
+  background: var(--tint);
 }
 
 .main,
@@ -31,7 +46,8 @@
   padding: var(--space-3) calc(var(--space-4) + var(--safe-right)) calc(var(--space-3) + var(--safe-bottom))
     calc(var(--space-4) + var(--safe-left));
   background: var(--surface);
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--line-strong);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
 }
 
 /* Tablet landscape: two panes. The tracker sits left; details and dice right. Opt-in per screen. */

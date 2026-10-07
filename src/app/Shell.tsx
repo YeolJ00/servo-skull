@@ -2,9 +2,9 @@ import type { ComponentChildren } from 'preact';
 import styles from './Shell.module.css';
 
 interface Props {
-  /** Header content. During a game it is tinted with the active player's color. */
-  header: ComponentChildren;
-  /** CSS color used to tint the header. */
+  /** Header content. During a game it is tinted with the active player's color. Omit for a hero screen. */
+  header?: ComponentChildren;
+  /** CSS color used to tint the header and its top bar. */
   tint?: string | undefined;
   /** Bottom bar content, in the thumb zone. The primary action goes last (right). */
   footer?: ComponentChildren;
@@ -20,9 +20,13 @@ interface Props {
 export function Shell({ header, tint, footer, panes, children }: Props) {
   return (
     <div class={styles.shell}>
-      <header class={styles.header} style={tint ? { '--tint': tint } : undefined}>
-        {header}
-      </header>
+      {header ? (
+        <header class={styles.header} style={tint ? { '--tint': tint } : undefined}>
+          {header}
+        </header>
+      ) : (
+        <div class={styles.topPad} />
+      )}
       <main class={panes ? styles.mainPanes : styles.main}>{children}</main>
       {footer && <footer class={styles.footer}>{footer}</footer>}
     </div>

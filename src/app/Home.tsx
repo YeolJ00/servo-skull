@@ -2,6 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { loadGame } from '../data/gameStorage.ts';
 import { t } from '../i18n/index.ts';
 import { Button } from '../ui/Button.tsx';
+import { SkullIcon } from '../ui/SkullIcon.tsx';
 import styles from './Home.module.css';
 import { routeHref } from './router.ts';
 import { Shell } from './Shell.tsx';
@@ -21,14 +22,18 @@ export function Home() {
     void loadGame().then((g) => setHasGame(!!g));
   }, []);
   return (
-    <Shell
-      header={
-        <div>
-          <h1 class={styles.title}>{t.app.name}</h1>
-          <p class={styles.tagline}>{t.app.tagline}</p>
+    <Shell>
+      <section class={styles.hero}>
+        <SkullIcon size={112} class={styles.skull} title={t.app.name} />
+        <h1 class={styles.title}>{t.app.name}</h1>
+        <p class={styles.tagline}>{t.app.tagline}</p>
+        <div class={styles.rule} aria-hidden="true">
+          <span />
+          <i />
+          <span />
         </div>
-      }
-    >
+      </section>
+
       <div class={styles.menu}>
         {hasGame && (
           <MenuItem href={routeHref({ screen: 'game' })} label={t.home.continueGame} hint={t.home.continueHint} primary />
@@ -44,7 +49,7 @@ export function Home() {
       </div>
 
       <section class={styles.settings} aria-label={t.home.theme}>
-        <h2 class={styles.settingsTitle}>{t.home.theme}</h2>
+        <p class="kicker">{t.home.theme}</p>
         <div class={styles.segmented} role="group">
           {themes.map((th) => (
             <button

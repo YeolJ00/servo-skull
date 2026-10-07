@@ -16,8 +16,8 @@ export default defineConfig({
         name: 'Servo-skull: 40k game host',
         short_name: 'Servo-skull',
         description: 'Turn tracker, counters, and dice for a game of Warhammer 40,000.',
-        theme_color: '#1B2230',
-        background_color: '#1B2230',
+        theme_color: '#12171F',
+        background_color: '#12171F',
         display: 'standalone',
         orientation: 'any',
         icons: [

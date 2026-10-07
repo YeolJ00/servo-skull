@@ -3,6 +3,8 @@
 @import '@fontsource/barlow/600.css';
 @import '@fontsource/barlow-condensed/600.css';
 @import '@fontsource/barlow-condensed/700.css';
+@import '@fontsource/cinzel/600.css';
+@import '@fontsource/cinzel/700.css';
 @import './tokens.css';
 
 *,
@@ -32,9 +34,25 @@ html {
 body {
   min-height: 100dvh;
   font-size: var(--text-md);
+  /* Depth: a cold glow at the top fading into the void below. */
+  background:
+    radial-gradient(120% 70% at 50% -10%, var(--bg-glow) 0%, var(--bg) 55%, var(--bg) 100%) fixed,
+    var(--bg);
+}
+
+/* A faint diagonal hatch over everything, like brushed metal. Static, not animated. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(135deg, var(--texture-ink) 0 1px, transparent 1px 8px);
 }
 
 #app {
+  position: relative;
+  z-index: 1;
   min-height: 100dvh;
 }
 
@@ -52,7 +70,7 @@ p {
 }
 
 a {
-  color: var(--primary);
+  color: var(--primary-bright);
 }
 
 button,
@@ -70,6 +88,11 @@ textarea {
   font-size: var(--text-md);
 }
 
+::selection {
+  background: var(--brass);
+  color: var(--on-primary);
+}
+
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
@@ -77,6 +100,65 @@ textarea {
 
 .num {
   font-variant-numeric: tabular-nums;
+}
+
+/* Chamfered plate: a brass-edged panel with cut corners. The pseudo-element is the inner face. */
+.plate {
+  --plate-edge: linear-gradient(160deg, var(--primary-bright), var(--primary-dim));
+  --plate-face: var(--surface);
+  position: relative;
+  isolation: isolate;
+  background: var(--plate-edge);
+  clip-path: polygon(
+    var(--cut) 0,
+    100% 0,
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    0 100%,
+    0 var(--cut)
+  );
+}
+
+.plate::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  background: var(--plate-face);
+  clip-path: polygon(
+    var(--cut) 0,
+    100% 0,
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    0 100%,
+    0 var(--cut)
+  );
+}
+
+/* Dimmer edge for secondary panels. */
+.plate-dim {
+  --plate-edge: var(--line);
+}
+
+/* Section kicker: small inscriptional caps between two hairlines. */
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-title);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--primary-bright);
+  white-space: nowrap;
+}
+
+.kicker::before,
+.kicker::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
 }
 
 @media (prefers-reduced-motion: reduce) {

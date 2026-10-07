@@ -1,4 +1,9 @@
+/* Chamfered buttons. The pseudo-element is the inner face; the element background is the edge. */
 .button {
+  --edge: var(--line);
+  --face: var(--surface-raised);
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -6,43 +11,72 @@
   min-height: var(--touch);
   min-width: var(--touch);
   padding: 0 var(--space-5);
-  border: 1px solid transparent;
-  border-radius: var(--radius);
-  background: var(--surface-raised);
+  border: 0;
+  background: var(--edge);
   color: var(--text);
+  font-family: var(--font-display);
   font-weight: 600;
-  font-size: var(--text-lg);
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
   text-decoration: none;
   cursor: pointer;
   user-select: none;
   touch-action: manipulation;
+  clip-path: polygon(
+    var(--cut) 0,
+    100% 0,
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    0 100%,
+    0 var(--cut)
+  );
 }
 
-.button:active {
-  filter: brightness(1.15);
+.button::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  background: var(--face);
+  clip-path: polygon(
+    var(--cut) 0,
+    100% 0,
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    0 100%,
+    0 var(--cut)
+  );
+}
+
+.button:active::before {
+  filter: brightness(1.2);
 }
 
 .button:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: default;
 }
 
 .primary {
-  background: var(--primary);
+  --edge: var(--primary-bright);
+  --face: linear-gradient(180deg, var(--primary-bright) 0%, var(--primary) 55%, var(--primary-dim) 100%);
   color: var(--on-primary);
+  box-shadow: var(--glow);
 }
 
 .secondary {
-  border-color: var(--line);
+  --edge: linear-gradient(160deg, var(--line-strong), var(--line));
 }
 
 .danger {
-  background: var(--danger);
+  --edge: var(--danger);
+  --face: var(--danger);
   color: var(--on-danger);
 }
 
 .ghost {
-  background: transparent;
+  --edge: transparent;
+  --face: transparent;
 }
 
 .block {

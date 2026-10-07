@@ -4,6 +4,7 @@ import type { GameState, PlayerId } from '../engine/types.ts';
 import { t } from '../i18n/index.ts';
 import { Button } from '../ui/Button.tsx';
 import { Counter } from '../ui/Counter.tsx';
+import { SkullIcon } from '../ui/SkullIcon.tsx';
 import styles from './Game.module.css';
 import { navigate, routeHref } from './router.ts';
 import { Shell } from './Shell.tsx';
@@ -87,9 +88,11 @@ function Board({ game }: { game: GameHandle & { status: 'ready' } }) {
         </>
       }
     >
-      <div class={styles.left}>
-        <section class={styles.stepCard} aria-live="polite">
-          <p class={styles.kicker}>{state.finished ? t.game.over : t.game.whatToDo}</p>
+      <SkullIcon size={340} class={styles.watermark} />
+
+      <div class={`${styles.left} ${styles.content}`}>
+        <section class={`plate ${styles.stepCard}`} aria-live="polite">
+          <p class="kicker">{state.finished ? t.game.over : t.game.whatToDo}</p>
           <h2 class={styles.stepHeading}>{state.finished ? t.game.overHelp : title}</h2>
           {!state.finished && <p class={styles.help}>{t.steps[step].help}</p>}
           {step === 'command/cp' && !state.finished && <p class={styles.note}>{t.game.cpApplied}</p>}
@@ -102,10 +105,10 @@ function Board({ game }: { game: GameHandle & { status: 'ready' } }) {
         </section>
       </div>
 
-      <div class={styles.right}>
+      <div class={`${styles.right} ${styles.content}`}>
         <section class={styles.counters}>
           {(['p1', 'p2'] as const).map((p) => (
-            <div class={styles.playerBlock} key={p}>
+            <div class={`plate plate-dim ${styles.playerBlock}`} key={p}>
               <h2 class={styles.playerName}>
                 <span class={styles.dot} style={{ background: setup.players[p].color }} />
                 {setup.players[p].name}

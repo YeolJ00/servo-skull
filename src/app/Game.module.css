@@ -7,6 +7,8 @@
   display: flex;
   justify-content: space-between;
   gap: var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
   color: var(--text-muted);
 }
 
@@ -19,13 +21,18 @@
 }
 
 .stepTitle {
+  font-family: var(--font-display);
   font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .cpRow {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2) var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
   color: var(--text-muted);
 }
 
@@ -36,12 +43,17 @@
   color: var(--text);
 }
 
+.stat strong {
+  color: var(--primary-bright);
+}
+
 .dot {
   display: inline-block;
   width: 12px;
   height: 12px;
   border-radius: 50%;
   flex: none;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 
 .left,
@@ -61,21 +73,20 @@
   }
 }
 
+/* The hero: what to do now. */
 .stepCard {
   display: grid;
   gap: var(--space-3);
-  padding: var(--space-4);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  border-left: 4px solid var(--primary);
-}
-
-.kicker {
-  color: var(--text-muted);
+  padding: var(--space-4) var(--space-4) var(--space-5);
 }
 
 .stepHeading {
-  font-size: var(--text-3xl);
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 2.1rem;
+  letter-spacing: 0.02em;
+  color: var(--primary-bright);
+  text-shadow: var(--glow);
 }
 
 .help {
@@ -88,7 +99,7 @@
 
 .error {
   padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius);
+  border-left: 3px solid var(--on-danger);
   background: var(--danger);
   color: var(--on-danger);
 }
@@ -98,6 +109,8 @@
   min-height: var(--touch);
   display: inline-flex;
   align-items: center;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
 }
 
 .counters {
@@ -108,16 +121,19 @@
 .playerBlock {
   display: grid;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
+  padding: var(--space-3) var(--space-4) var(--space-4);
 }
 
 .playerName {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: var(--text-xl);
+  font-family: var(--font-title);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--line);
 }
 
 @media (min-width: 600px) {
@@ -130,4 +146,22 @@
   display: flex;
   justify-content: space-between;
   gap: var(--space-3);
+}
+
+/* Faint servo-skull watermark behind the content. */
+.watermark {
+  position: fixed;
+  right: -48px;
+  bottom: 72px;
+  z-index: 0;
+  width: 340px;
+  height: 340px;
+  color: var(--primary);
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
 }

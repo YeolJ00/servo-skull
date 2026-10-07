@@ -24,7 +24,7 @@ npm run check      # tsc --noEmit + eslint
 npm run build      # production build to dist/
 npm run preview    # serve dist/ locally
 npm run pack -- --factions space-marines,orks   # build a rules pack (needs network)
-npm run icons      # regenerate public/icons/*.png from the shape in scripts/make-icons.mjs
+npm run icons      # rasterize public/icon.svg into public/icons/*.png with headless Chrome
 node scripts/screenshot.mjs --url http://localhost:4173/servo-skull/#/game --out shot.png --size 390x844 --scheme dark [--seed game.json]
                    # headless Chrome screenshot at a phone/tablet size; --seed writes a saved game into IndexedDB first
 ```
@@ -38,7 +38,7 @@ Before finishing any task, `npm run check && npm test` must pass.
 - Hash routing (`#/game`) so GitHub Pages never 404s on refresh.
 - IndexedDB via `idb-keyval` for rules packs, saved armies, and game event logs. Use `localStorage` only for small settings.
 - `vite-plugin-pwa` for the manifest and offline caching.
-- Fonts self-hosted with `@fontsource/barlow` and `@fontsource/barlow-condensed`. No Google Fonts requests, so it works offline.
+- Fonts self-hosted with `@fontsource/barlow`, `@fontsource/barlow-condensed`, and `@fontsource/cinzel`. No Google Fonts requests, so it works offline.
 - Vitest for tests. Node 20+.
 
 ## Architecture
@@ -219,24 +219,34 @@ interface ArmyList {
 
 ## UI guidelines (mobile first)
 
-Design direction: a field dataslate, not a website. The current step is the hero; everything else is secondary.
+Design direction: a field dataslate, not a website. Immersive and dark: void-black depths, brass fittings, bone text, chamfered plates. The current step is the hero; everything else is secondary.
 
 **Colors**
 
 | Token | Hex | Use |
 |---|---|---|
 | Void | #1B2230 | Background (dark mode is the default) |
+| Void deep | #12171F | Bottom of the background gradient, icon tile |
 | Hull | #262F3F | Surfaces |
 | Bone | #ECE6D6 | Text |
-| Brass | #B8913A | Primary action |
+| Brass | #B8913A | Primary action, plate edges |
+| Brass bright | #D8B35A | Titles, numerals, highlights |
 | Blood | #B3362C | Destroyed, battle-shock, danger |
 
-- Player colors are chosen in setup (defaults: blue #3F6FD8 and green #5E9E3A). The header is tinted with the active player's color. Color carries information, so always pair it with the player's name.
-- Light mode, for bright rooms: cool gray-white #EEF1F5 background with Void text.
+- Player colors are chosen in setup (defaults: blue #3F6FD8 and green #5E9E3A). The header is tinted with the active player's color and carries a thin bar of it along the top. Color carries information, so always pair it with the player's name.
+- Light mode, for bright rooms: parchment #E7E1D2 background with Void text and darker brass. Same structure, same fittings.
+- Background: a radial glow at the top fading into the void, plus a static diagonal hatch at ~3% (`body::before`). No animation.
+
+**Surfaces and fittings**
+
+- Panels are chamfered plates: the `.plate` global class (edge gradient + inner face via `::before`, corners cut by `clip-path`, `--cut` 10px). `.plate-dim` for secondary panels. Buttons and counter buttons use the same chamfer.
+- Section kickers use the `.kicker` global class: small Cinzel caps between two hairlines.
+- The servo-skull mark is `src/ui/SkullIcon.tsx` (inline SVG, `currentColor`), the same geometry as `public/icon.svg`. It is the Home hero and a faint watermark behind the Game screen. PNG icons are rasterized from the SVG by `npm run icons` (needs Chrome).
 
 **Type**
 
-- Barlow for text; Barlow Condensed for phase names and big numbers.
+- Cinzel for the app name, step titles, and player names: inscriptional, letter-spaced, brass bright.
+- Barlow for text; Barlow Condensed for phase names, buttons, labels, and big numbers.
 - Use tabular numerals for counters.
 - Body text ≥ 16px. Inputs ≥ 16px, which prevents iOS from zooming.
 
@@ -266,7 +276,7 @@ Design direction: a field dataslate, not a website. The current step is the hero
 **Avoid**
 
 - All-caps labels and monospace data labels.
-- Decorative cards, and meta strings joined with middle dots.
+- Plates that hold nothing, and meta strings joined with middle dots.
 - Animation that isn't a response to a tap. Respect `prefers-reduced-motion`.
 
 **Copy**

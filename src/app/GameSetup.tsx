@@ -64,7 +64,7 @@ export function GameSetup() {
         {hasGame && <p class={styles.warning}>{t.setup.replaceWarning}</p>}
 
         {(['p1', 'p2'] as const).map((id) => (
-          <section class={styles.player} key={id}>
+          <section class={`plate plate-dim ${styles.player}`} key={id}>
             <h2 class={styles.playerTitle}>{id === 'p1' ? t.setup.player1 : t.setup.player2}</h2>
             <label class={styles.field}>
               <span>{t.setup.name}</span>
@@ -96,8 +96,8 @@ export function GameSetup() {
           </section>
         ))}
 
-        <section class={styles.player}>
-          <h2 class={styles.playerTitle}>{t.setup.firstPlayer}</h2>
+        <section class={`plate plate-dim ${styles.player}`}>
+          <p class={styles.playerTitle}>{t.setup.firstPlayer}</p>
           <div class={styles.segmented} role="radiogroup" aria-label={t.setup.firstPlayer}>
             {(['p1', 'p2'] as const).map((id) => (
               <button
@@ -116,7 +116,7 @@ export function GameSetup() {
           <p class={styles.hint}>{t.setup.firstPlayerHint}</p>
         </section>
 
-        <section class={styles.player}>
+        <section class={`plate plate-dim ${styles.player}`}>
           <Counter label={t.setup.rounds} value={rounds} min={1} max={10} onChange={setRounds} />
           <Counter label={t.setup.startingCp} value={startingCp} min={0} max={12} onChange={setStartingCp} />
           <p class={styles.hint}>{t.setup.startingCpHint}</p>

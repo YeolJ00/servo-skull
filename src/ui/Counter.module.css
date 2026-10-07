@@ -7,7 +7,11 @@
 }
 
 .label {
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
 }
 
 .controls {
@@ -17,19 +21,52 @@
 }
 
 .button {
+  --cut: var(--cut-sm);
+  position: relative;
+  isolation: isolate;
   width: var(--touch);
   height: var(--touch);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface-raised);
+  border: 0;
+  background: var(--line-strong);
+  color: var(--primary-bright);
+  font-family: var(--font-display);
   font-size: var(--text-xl);
+  font-weight: 700;
   line-height: 1;
   cursor: pointer;
   touch-action: manipulation;
+  clip-path: polygon(
+    var(--cut) 0,
+    100% 0,
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    0 100%,
+    0 var(--cut)
+  );
+}
+
+.button::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  background: var(--surface-raised);
+  clip-path: polygon(
+    var(--cut) 0,
+    100% 0,
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    0 100%,
+    0 var(--cut)
+  );
+}
+
+.button:active::before {
+  filter: brightness(1.25);
 }
 
 .button:disabled {
-  opacity: 0.35;
+  opacity: 0.3;
   cursor: default;
 }
 
@@ -37,6 +74,8 @@
   min-width: 2.5ch;
   text-align: center;
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
+  font-size: var(--text-3xl);
   font-weight: 700;
+  color: var(--primary-bright);
+  text-shadow: var(--glow);
 }
