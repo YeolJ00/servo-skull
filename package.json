@@ -1,0 +1,37 @@
+{
+  "name": "servo-skull",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A static game host for Warhammer 40,000 (11th edition): turn tracker, counters, and dice for two players at the table.",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "tsc --noEmit && eslint .",
+    "icons": "node scripts/make-icons.mjs",
+    "pack": "echo \"build-pack is scheduled for M3\" && exit 1"
+  },
+  "dependencies": {
+    "@fontsource/barlow": "^5.3.0",
+    "@fontsource/barlow-condensed": "^5.3.0",
+    "idb-keyval": "^6.3.0",
+    "preact": "^11.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@preact/preset-vite": "^2.10.6",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.1",
+    "vite": "^8.3.3",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.0.3"
+  }
+}

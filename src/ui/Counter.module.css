@@ -1,0 +1,42 @@
+.counter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--touch);
+}
+
+.label {
+  font-weight: 500;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.button {
+  width: var(--touch);
+  height: var(--touch);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  font-size: var(--text-xl);
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.value {
+  min-width: 2.5ch;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+}

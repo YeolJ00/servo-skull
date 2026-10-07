@@ -1,0 +1,82 @@
+/* Design tokens. Dark mode is the default; light mode is for bright rooms. */
+:root {
+  /* Palette */
+  --void: #1b2230;
+  --hull: #262f3f;
+  --bone: #ece6d6;
+  --brass: #b8913a;
+  --blood: #b3362c;
+  --player-blue: #3f6fd8;
+  --player-green: #5e9e3a;
+
+  /* Semantic colors (dark) */
+  --bg: var(--void);
+  --surface: var(--hull);
+  --surface-raised: #2f3a4d;
+  --text: var(--bone);
+  --text-muted: #a9a394;
+  --line: #3a455a;
+  --primary: var(--brass);
+  --on-primary: #141414;
+  --danger: var(--blood);
+  --on-danger: #fff4f0;
+  --focus: #e3c272;
+
+  /* Type */
+  --font-text: 'Barlow', system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', 'Barlow', system-ui, sans-serif;
+  --text-md: 1rem;      /* 16px: body minimum */
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.75rem;
+
+  /* Spacing and shape */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --touch: 48px;       /* minimum touch target */
+
+  /* Safe areas */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --bg: #eef1f5;
+    --surface: #ffffff;
+    --surface-raised: #f6f8fb;
+    --text: var(--void);
+    --text-muted: #5a6475;
+    --line: #cfd6e0;
+    --primary: #9a7627;
+    --on-primary: #ffffff;
+    --danger: #a32d24;
+    --focus: #6b4f12;
+    color-scheme: light;
+  }
+}
+
+:root[data-theme='light'] {
+  --bg: #eef1f5;
+  --surface: #ffffff;
+  --surface-raised: #f6f8fb;
+  --text: var(--void);
+  --text-muted: #5a6475;
+  --line: #cfd6e0;
+  --primary: #9a7627;
+  --on-primary: #ffffff;
+  --danger: #a32d24;
+  --focus: #6b4f12;
+  color-scheme: light;
+}

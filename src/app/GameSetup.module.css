@@ -1,0 +1,94 @@
+.form {
+  display: grid;
+  gap: var(--space-5);
+  max-width: 520px;
+}
+
+.warning {
+  padding: var(--space-3) var(--space-4);
+  border-left: 4px solid var(--danger);
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+
+.player {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.playerTitle {
+  font-size: var(--text-xl);
+}
+
+.field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.input {
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.swatch,
+.swatchOn {
+  width: var(--touch);
+  height: var(--touch);
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.swatchOn {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--bg);
+}
+
+.segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.segment,
+.segmentOn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.segmentOn {
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 600;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.hint {
+  color: var(--text-muted);
+}

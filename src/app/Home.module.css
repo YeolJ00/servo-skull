@@ -1,0 +1,60 @@
+.title {
+  font-size: var(--text-2xl);
+}
+
+.tagline {
+  color: var(--text-muted);
+}
+
+.menu {
+  display: grid;
+  gap: var(--space-5);
+  max-width: 480px;
+}
+
+.item {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.hint {
+  color: var(--text-muted);
+}
+
+.settings {
+  margin-top: var(--space-6);
+  max-width: 480px;
+}
+
+.settingsTitle {
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-2);
+}
+
+.segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.segment,
+.segmentOn {
+  min-height: var(--touch);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.segmentOn {
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 600;
+}
+
+.credit {
+  margin-top: var(--space-6);
+  color: var(--text-muted);
+}

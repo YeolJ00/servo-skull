@@ -1,0 +1,45 @@
+.shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100dvh;
+}
+
+.header {
+  --tint: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: calc(var(--space-3) + var(--safe-top)) calc(var(--space-4) + var(--safe-right)) var(--space-3)
+    calc(var(--space-4) + var(--safe-left));
+  background: color-mix(in srgb, var(--tint) 45%, var(--surface));
+  border-bottom: 1px solid var(--line);
+}
+
+.main,
+.mainPanes {
+  padding: var(--space-4) calc(var(--space-4) + var(--safe-right)) var(--space-6)
+    calc(var(--space-4) + var(--safe-left));
+}
+
+.footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) calc(var(--space-4) + var(--safe-right)) calc(var(--space-3) + var(--safe-bottom))
+    calc(var(--space-4) + var(--safe-left));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+/* Tablet landscape: two panes. The tracker sits left; details and dice right. Opt-in per screen. */
+@media (min-width: 900px) and (orientation: landscape) {
+  .mainPanes {
+    display: grid;
+    grid-template-columns: minmax(320px, 1fr) 1.2fr;
+    gap: var(--space-5);
+    align-items: start;
+  }
+}

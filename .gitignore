@@ -1,0 +1,11 @@
+node_modules/
+dist/
+dev-dist/
+.vite/
+
+# Rules packs and the Wahapedia download cache are Games Workshop IP. Never commit them.
+packs/
+.cache/
+
+.DS_Store
+*.log
